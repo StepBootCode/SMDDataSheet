@@ -1,0 +1,48 @@
+<resources>
+    <string name="app_name">SMD DataSheet</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">SMD DataSheet database</string>
+    <string name="nav_header_subtitle">www.bootcode.ru</string>
+    <string name="nav_header_desc">SMD DataSheet database</string>
+
+
+    <!-- Strings related to Menu -->
+    <string name="menu_home">Home</string>
+    <string name="menu_favorite">Favorites</string>
+    <string name="menu_database">Database editor</string>
+    <string name="menu_add">Add SMD</string>
+    <string name="menu_tools">Open settings</string>
+    <string name="menu_update">Update</string>
+    <string name="menu_edit">Edit</string>
+
+
+    <string name="menu_bootcode">bootcode.ru</string>
+    <string name="button_search">Search</string>
+    <string name="tv_marker">Label:</string>
+    <string name="tv_name">Name:</string>
+    <string name="tv_note">Function:</string>
+    <string name="tv_code">Body:</string>
+    <string name="button_open">Open</string>
+    <string name="menu_settings">Settings</string>
+
+
+
+    <!-- Strings related to Settings -->
+    <string name="pref_title_system_sync_settings">System sync settings</string>
+    <string name="pref_title_local">Enable RU loc.</string>
+    <string name="pref_description_local">You need to restart the application</string>
+    <string name="pref_title_cash">Cache datasheets</string>
+    <string name="pref_description_cash">Download DataSheets into the "/Documents/DataSheets" directory</string>
+    <string name="pref_title_datasheet_save_path">DataSheets save path</string>
+    <string name="pref_search">Search (default: by labeling)</string>
+    <string name="pref_search_by_name">Search by name</string>
+    <string name="pref_search_by_function">Search by function</string>
+
+    <!-- Strings related to Toast and messages -->
+    <string name="toast_copy_succes">Copy database succes!</string>
+    <string name="toast_copy_error">Copy data error!</string>
+    <string name="toast_pdf_not_install">PDF Reader not install</string>
+
+
+</resources>

@@ -1,0 +1,46 @@
+<resources>
+    <string name="app_name">SMD DataSheet</string>
+
+    <!-- Strings related to Navigator panel -->
+    <string name="navigation_drawer_open">Открыть панель навигации</string>
+    <string name="navigation_drawer_close">Закрыть панель навигации</string>
+    <string name="nav_header_title">База данных SMD DataSheet</string>
+    <string name="nav_header_subtitle">www.bootcode.ru</string>
+    <string name="nav_header_desc">База данных SMD DataSheet</string>
+
+
+    <!-- Strings related to Menu -->
+    <string name="menu_home">Домой</string>
+    <string name="menu_favorite">Избранное</string>
+    <string name="menu_database">Редактор базы данных</string>
+    <string name="menu_add">Добавить SMD</string>
+    <string name="menu_tools">Открыть настройки</string>
+    <string name="menu_update">Обновить</string>
+    <string name="menu_edit">Редактировать</string>
+
+
+    <string name="menu_bootcode">bootcode.ru</string>
+    <string name="button_search">Найти</string>
+    <string name="tv_marker">Маркировка:</string>
+    <string name="tv_name">Код(название):</string>
+    <string name="tv_note">Назначение:</string>
+    <string name="tv_code">Корпус:</string>
+    <string name="button_open">Открыть</string>
+    <string name="menu_settings">Настройки</string>
+
+    <!-- Strings related to Settings -->
+    <string name="pref_title_system_sync_settings">Синхронизировать настройки</string>
+    <string name="pref_title_local">База данных на русском</string>
+    <string name="pref_description_local">Необходим перезапуск прложения</string>
+    <string name="pref_title_cash">Кешировать datasheets</string>
+    <string name="pref_description_cash">Загружает DataSheet в каталог /Documents/DataSheet для повторного использования без повторной загрузки</string>
+    <string name="pref_title_datasheet_save_path">Каталог сохранения DataSteet`ов</string>
+    <string name="pref_search">Поиск (по умолчанию: по маркировке)</string>
+    <string name="pref_search_by_name">Искать по наименованию</string>
+    <string name="pref_search_by_function">Искать по функционалу</string>
+
+    <!-- Strings related to Toast and messages -->
+    <string name="toast_copy_succes">База данных скопирована!</string>
+    <string name="toast_copy_error">Ошибка копирования базы данных!</string>
+    <string name="toast_pdf_not_install">Не установлен PDF Reader!</string>
+</resources>
