@@ -1,11 +1,12 @@
 package ru.bootcode.smddatasheet;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.os.Environment;
+import android.database.sqlite.SQLiteDatabase;
 import android.preference.PreferenceManager;
 import android.view.View;
 import android.view.MenuItem;
@@ -23,37 +24,40 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.Toast;
+
 
 import com.google.android.gms.ads.MobileAds;
 
 import android.os.Bundle;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.List;
+import java.util.concurrent.Callable;
+
+import rx.Observable;
+import rx.Observer;
+import rx.Single;
+import rx.SingleSubscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
-
     final Context context = this;
+    static final int NEW_SMD_REQUEST = 2;
 
     // SharedPreferences переменные (хранение настроек)
     SharedPreferences sp;
-    Boolean is_ru_local;        // Локализация базы данных En / Ru  (Ru = True, En = false)
     Boolean do_cash;            // true - включено кеширование на внутренний носитель
     Boolean sw_search_name, sw_search_function; // Указывают на поля для поиска
     String save_path;
 
-
     // Переменные для работы с базой данных
-    private ListView lvMain;
+    private ListView lvComponents;
     private ListComponentAdapter adapter;
-    private List<Component> mComponentList;
-    private Component SelectedComponent;
-    private DatabaseHelper mDBHelper;
+    private List<Component> componentList;
+    private Component selectedComponent;
+    private DatabaseHelper dbHelper;
 
     // Переменные для работы с рекламмой
     static final private String ADMOB_APP_ID="ca-app-pub-4325894448754236~8052800321";
@@ -62,17 +66,16 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        lvComponents = (ListView) findViewById(R.id.lvMain);
         // запросим кеш по умолчанию
-        String sSavePathDef = Utils.getCacheSavePath();
+        String sSavePathDef = Utils.getDefaultCacheDir();
 
         // Получаем SharedPreferences (Сохраненнве настройки приложения) ---------------------------
         sp = PreferenceManager.getDefaultSharedPreferences(this);
-        is_ru_local = sp.getBoolean("ru_switch", false);
-        do_cash     = sp.getBoolean("do_cash", false);
-        save_path     = sp.getString("savepath", sSavePathDef);
-        sw_search_name     = sp.getBoolean("switch_search_name", false);
-        sw_search_function = sp.getBoolean("sw_search_function", false);
-
+        sw_search_name      = sp.getBoolean("keySwitchSearchName", false);
+        sw_search_function  = sp.getBoolean("keySwitchSearchFunction", false);
+        //do_cash           = sp.getBoolean("keyCache", false);
+        save_path         = sp.getString("keySavePath", sSavePathDef);
 
         // Тут бы проверить savePath на доступность и др. хрень. (в утилитах конечно)
 
@@ -86,19 +89,17 @@ public class MainActivity extends AppCompatActivity
         drawer.addDrawerListener(toggle);
         toggle.syncState();
         navigationView.setNavigationItemSelectedListener(this);
-
-
+        
         // Инициализируем AdMob,  Для теста можно взять ID: ca-app-pub-3940256099942544/6300978111
         MobileAds.initialize(this, ADMOB_APP_ID);
 
         // Создаем Helper для базы данных Компонентов и определяемся с локализацией ----------------
-        mDBHelper = new DatabaseHelper(this);
-        mDBHelper.setRuLocal(is_ru_local);
+        dbHelper = new DatabaseHelper(this);
 
         // Проверка на существование базы данных ---------------------------------------------------
-        File database = getApplicationContext().getDatabasePath(DatabaseHelper.DBNAME);
+        File database = getApplicationContext().getDatabasePath(DatabaseHelper.getDBNAME());
         if(!database.exists()) {
-            mDBHelper.getReadableDatabase();
+            dbHelper.getReadableDatabase();
             if(Utils.copyDatabase(this)) {
                 Utils.showToast(this, R.string.toast_copy_succes);
             } else {
@@ -108,9 +109,9 @@ public class MainActivity extends AppCompatActivity
         }
 
         // Проверка на актуальность версии базы данных ---------------------------------------------
-        Boolean isActualVersion =  mDBHelper.getIsActualVersion();
+        Boolean isActualVersion =  dbHelper.getIsActualVersion();
         if(!isActualVersion) {
-            mDBHelper.getReadableDatabase();
+            dbHelper.getReadableDatabase();
             if(Utils.copyDatabase(this)) {
                 Utils.showToast(this, R.string.toast_copy_succes);
             } else {
@@ -119,27 +120,59 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
-        // Запрос комонентов в из базы и передаем их адаптер ---------------------------------------
-        mComponentList = mDBHelper.getListComponent();
-        adapter = new ListComponentAdapter(this, mComponentList);
+        // Запрос комонентов в из базы и передаем их адаптер (Все это под оболочкой RXJava)---------
+        //сomponentList = dbHelper.getListComponent();                  - отдал под RXJava
+        Callable<List<Component>> callable = new Callable<List<Component>>() {
+            @Override
+            public List<Component> call() throws Exception {
+                return dbHelper.getListComponent();
+            }
+        };
+        Single.fromCallable(callable)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new SingleSubscriber<List<Component>>() {
+                    @Override
+                    public void onSuccess(List<Component> value) {
+                        adapter = new ListComponentAdapter(MainActivity.this, value);
+                        lvComponents.setAdapter(adapter);
+                    }
+                    @Override
+                    public void onError(Throwable error) { }
+                });
 
         // Создаем список и установим обработчик нажатия элемента списка ---------------------------
-        lvMain = (ListView) findViewById(R.id.lvMain);
-        lvMain.setAdapter(adapter);
-        lvMain.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        //adapter = new ListComponentAdapter(this, сomponentList);      - отдал под RXJava
+        //lvComponents.setAdapter(adapter);                             - отдал под RXJava
+        lvComponents.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = new Intent(MainActivity.this, ComponentActivity.class);
-                SelectedComponent = mDBHelper.getComponent(String.valueOf(id));
-                //intent.putExtra("id", String.valueOf(id));
-                intent.putExtra("name",     SelectedComponent.getName());
-                intent.putExtra("code",     SelectedComponent.getCode());
-                intent.putExtra("marker",   SelectedComponent.getMarker());
-                intent.putExtra("note",     SelectedComponent.getNote());
-                intent.putExtra("prod",     SelectedComponent.getProd());
-                intent.putExtra("datasheet",SelectedComponent.getDatasheet());
-                intent.putExtra("favorite",SelectedComponent.get_forvarite());
-                intent.putExtra("islocal",SelectedComponent.get_islcal());
-                startActivity(intent);
+                //Intent intent = new Intent(MainActivity.this, ComponentActivity.class);
+
+                //selectedComponent = dbHelper.getComponent(String.valueOf(id));
+                String[] str = {String.valueOf(id)};
+                Observable.from(str)
+                        .subscribe(new Observer<String>() {
+                            @Override
+                            public void onNext(String s) {
+                                   selectedComponent = dbHelper.getComponent(s);
+                            }
+                            @Override
+                            public void onCompleted() {
+                                Intent intent = new Intent(MainActivity.this, ComponentActivity.class);
+                                intent.putExtra("id",       selectedComponent.getID());
+                                intent.putExtra("name",     selectedComponent.getName());
+                                intent.putExtra("body",     selectedComponent.getBody());
+                                intent.putExtra("label",    selectedComponent.getLabel());
+                                intent.putExtra("func",     selectedComponent.getFunc());
+                                intent.putExtra("prod",     selectedComponent.getProd());
+                                intent.putExtra("datasheet",selectedComponent.getDatasheet());
+                                intent.putExtra("favorite", selectedComponent.get_forvarite());
+                                intent.putExtra("islocal",  selectedComponent.get_islcal());
+                                startActivity(intent);
+                            }
+                            @Override
+                            public void onError(Throwable e) { }
+                        });
             }
         });
 
@@ -167,11 +200,11 @@ public class MainActivity extends AppCompatActivity
                                     public void onClick(DialogInterface dialog, int id) {
                                         //Получаем текст из отображаем в строки ввода
                                         String txt = userInput.getText().toString();
-                                        mComponentList = mDBHelper.getFindComponent(txt,
+                                        componentList = dbHelper.getFindComponent(txt,
                                                 sw_search_name,
                                                 sw_search_function);
-                                        adapter = new ListComponentAdapter(context, mComponentList);
-                                        lvMain.setAdapter(adapter);
+                                        adapter = new ListComponentAdapter(context, componentList);
+                                        lvComponents.setAdapter(adapter);
                                     }
                                 })
                         .setNegativeButton("Отмена",
@@ -185,7 +218,6 @@ public class MainActivity extends AppCompatActivity
                 alertDialog.show();
             }
         });
-
     }
 
     @Override
@@ -205,21 +237,22 @@ public class MainActivity extends AppCompatActivity
         Intent intent;
         switch(item.getItemId()) {
             case R.id.nav_home:
-                mComponentList = mDBHelper.getListComponent();
-                adapter = new ListComponentAdapter(MainActivity.this, mComponentList);
-                lvMain.setAdapter(adapter);
+                componentList = dbHelper.getListComponent();
+                adapter = new ListComponentAdapter(MainActivity.this, componentList);
+                lvComponents.setAdapter(adapter);
                 break;
             case R.id.nav_favorites:
-                mComponentList = mDBHelper.getListFavorites();
-                adapter = new ListComponentAdapter(MainActivity.this, mComponentList);
-                lvMain.setAdapter(adapter);
+                componentList = dbHelper.getListFavorites();
+                adapter = new ListComponentAdapter(MainActivity.this, componentList);
+                lvComponents.setAdapter(adapter);
                 break;
             case R.id.nav_add:
-                intent = new Intent(MainActivity.this, NewSMDActivity.class);
-                startActivity(intent);
+                intent = new Intent(MainActivity.this, AddSMDActivity.class);
+                startActivityForResult(intent,NEW_SMD_REQUEST);
                 break;
             case R.id.nav_edit:
-
+                intent = new Intent(MainActivity.this, NewSMDActivity.class);
+                startActivityForResult(intent,NEW_SMD_REQUEST);
                 break;
             case R.id.nav_settings:
                 intent = new Intent(MainActivity.this, SettingsActivity.class);
@@ -231,11 +264,46 @@ public class MainActivity extends AppCompatActivity
             default:
                 break;
         }
-
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == NEW_SMD_REQUEST) {
+            if (resultCode == RESULT_OK) {
+                String[] str = new String[]{""};
+                ContentValues[] newValues = new ContentValues[1];
+                newValues[0]= new ContentValues();
+                newValues[0].put("name", data.getStringExtra("name"));
+                newValues[0].put("label", data.getStringExtra("label"));
+                newValues[0].put("body", data.getStringExtra("body"));
+                newValues[0].put("func", data.getStringExtra("func"));
+                newValues[0].put("datasheet", data.getStringExtra("pdf"));
+                newValues[0].put("favorite", 1);
+                newValues[0].put("islocal", 1);
+                newValues[0].put("prod", "");
+
+                Observable.from(newValues)
+                        .subscribe(new Observer<ContentValues>() {
+                            @Override
+                            public void onNext(ContentValues s) {
+                                SQLiteDatabase db = dbHelper.getWritableDatabase();
+                                db.insert("COMPONENTS", null, s);
+                            }
+                            @Override
+                            public void onCompleted() {
+                                List<Component> value =  dbHelper.getListComponent();
+                                adapter = new ListComponentAdapter(MainActivity.this, value);
+                                lvComponents.setAdapter(adapter);
+                            }
+                            @Override
+                            public void onError(Throwable e) { }
+                        });
+            }
+        }
+    }
 
 }

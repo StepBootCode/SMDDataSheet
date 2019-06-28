@@ -7,21 +7,30 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+
+import rx.Observable;
+import rx.Single;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     // Верися базы данных, при изменении следует увеличить (произойдет замешение уже имеющийся базы)
-    // В базе данных есть таблица с полем "version" указывающая на версию базы данных
-    public static final int VERSION = 2;
+    // В базе данных есть таблица с полем "version" указывающая на версию базы данных, при увилечении
+    // устанавливаем тоже значение, что и VERSION
+    private static final int VERSION = 4;
 
     // Константы указывающие на базу данных в локальном каталоге приложения
-    public static final String DBNAME = "smd.db";
-    public static final String DBLOCATION = "/data/data/ru.bootcode.smddatasheet/databases/";
+    private static final String DBNAME = "smd.db";
+    private static final String DBLOCATION = "/data/data/ru.bootcode.smddatasheet/databases/";
 
     private Context mContext;
     private SQLiteDatabase mDatabase;
 
-    // Переменная указывающая на локализацию БД устанавливаеться из настроек в MainActivity
-    private Boolean is_ru = false;
+    public static String getDBNAME() {
+        return DBNAME;
+    }
+    public static String getDBLOCATION() {
+        return DBLOCATION;
+    }
 
     public DatabaseHelper(Context context) {
         super(context, DBNAME, null, VERSION);
@@ -56,11 +65,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    // Установка (выбор) локализации БД
-    public void setRuLocal(Boolean ru_localization) {
-        is_ru = ru_localization;
-    }
-
     // Функция проверяет изменилась ли версия базы данных
     public Boolean getIsActualVersion() {
         int v = 0;
@@ -79,7 +83,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         // Проверяем актуальность версии базы данных и выплюнем результат -------------------------
         // если мы получили 0 значит где-то косяк (по идеи надо вызвать исключение)
         if (v == 0) return false;
-        return ((v < VERSION) ? false : true);
+        return (v >= VERSION);
     }
 
     // Возващает полный несортикрованный список компонентов
@@ -87,35 +91,27 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Component component = null;
         List<Component> componentList = new ArrayList<>();
         openDatabase();
-        Cursor cursor;
-        if (is_ru == true) {
+        Cursor cursor = null;
+
+        try {
             cursor = mDatabase.rawQuery(
-                    "SELECT id, code, marker, note_ru AS note, prod, name " +
-                        "FROM COMPONENTS",
-                    null);
-        } else {
-            try {
-            cursor = mDatabase.rawQuery(
-                    "SELECT id, code, marker, note, prod, name " +
+                    "SELECT _id, body, label, func, prod, name " +
                          "FROM COMPONENTS",
                     null);
-            }catch (Exception e) {
-                System.out.println(e.getMessage());
+        }catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        if (cursor != null) {
+            cursor.moveToFirst();
+            while (!cursor.isAfterLast()) {
+                component = new Component(cursor.getInt(0), cursor.getString(1), cursor.getString(2), cursor.getString(3));
+                component.setProd(cursor.getString(4));
+                component.setName(cursor.getString(5));
+                componentList.add(component);
+                cursor.moveToNext();
             }
-            cursor = mDatabase.rawQuery(
-                    "SELECT id, code, marker, note, prod, name " +
-                            "FROM COMPONENTS",
-                    null);
+            cursor.close();
         }
-        cursor.moveToFirst();
-        while (!cursor.isAfterLast()) {
-            component = new Component(cursor.getInt(0), cursor.getString(1), cursor.getString(2), cursor.getString(3));
-            component.setProd(cursor.getString(4));
-            component.setName(cursor.getString(5));
-            componentList.add(component);
-            cursor.moveToNext();
-        }
-        cursor.close();
         closeDatabase();
         return componentList;
     }
@@ -125,27 +121,26 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Component component = null;
         List<Component> componentList = new ArrayList<>();
         openDatabase();
-        Cursor cursor;
-        if (is_ru == true) {
+        Cursor cursor = null;
+        try {
             cursor = mDatabase.rawQuery(
-                    "SELECT id, code, marker, note_ru AS note, prod, name " +
+                    "SELECT _id, body, label, func, prod, name " +
                             "FROM COMPONENTS WHERE favorite=1",
                     null);
-        } else {
-            cursor = mDatabase.rawQuery(
-                    "SELECT id, code, marker, note, prod, name " +
-                            "FROM COMPONENTS WHERE favorite=1",
-                    null);
+        }catch (Exception e) {
+            System.out.println(e.getMessage());
         }
-        cursor.moveToFirst();
-        while (!cursor.isAfterLast()) {
-            component = new Component(cursor.getInt(0), cursor.getString(1), cursor.getString(2), cursor.getString(3));
-            component.setProd(cursor.getString(4));
-            component.setName(cursor.getString(5));
-            componentList.add(component);
-            cursor.moveToNext();
+        if (cursor != null) {
+            cursor.moveToFirst();
+            while (!cursor.isAfterLast()) {
+                component = new Component(cursor.getInt(0), cursor.getString(1), cursor.getString(2), cursor.getString(3));
+                component.setProd(cursor.getString(4));
+                component.setName(cursor.getString(5));
+                componentList.add(component);
+                cursor.moveToNext();
+            }
+            cursor.close();
         }
-        cursor.close();
         closeDatabase();
         return componentList;
     }
@@ -155,63 +150,58 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Component component = null;
         List<Component> componentList = new ArrayList<>();
         openDatabase();
-        Cursor cursor;
-        if (is_ru == true) {
+        Cursor cursor = null;
+        try {
             cursor = mDatabase.rawQuery(
-                    "SELECT id, code, marker, note_ru AS note, prod, name " +
+                    "SELECT _id, body, label, func, prod, name " +
                             "FROM COMPONENTS WHERE islocal=1",
                     null);
-        } else {
-            cursor = mDatabase.rawQuery(
-                    "SELECT id, code, marker, note, prod, name " +
-                            "FROM COMPONENTS WHERE islocal=1",
-                    null);
+    }catch (Exception e) {
+        System.out.println(e.getMessage());
+    }
+        if (cursor != null) {
+            cursor.moveToFirst();
+            while (!cursor.isAfterLast()) {
+                component = new Component(cursor.getInt(0), cursor.getString(1), cursor.getString(2), cursor.getString(3));
+                component.setProd(cursor.getString(4));
+                component.setName(cursor.getString(5));
+                componentList.add(component);
+                cursor.moveToNext();
+            }
+            cursor.close();
         }
-        cursor.moveToFirst();
-        while (!cursor.isAfterLast()) {
-            component = new Component(cursor.getInt(0), cursor.getString(1), cursor.getString(2), cursor.getString(3));
-            component.setProd(cursor.getString(4));
-            component.setName(cursor.getString(5));
-            componentList.add(component);
-            cursor.moveToNext();
-        }
-        cursor.close();
         closeDatabase();
         return componentList;
     }
 
     // Возвращает список компонентов после поиска по ключевому слову
-    public List<Component> getFindComponent(String sMarker,Boolean sw_name, Boolean  sw_function) {
+    public List<Component> getFindComponent(String sLabel,Boolean sw_name, Boolean  sw_function) {
         Component component = null;
         List<Component> componentList = new ArrayList<>();
         openDatabase();
-        Cursor cursor;
-        if (is_ru == true) {
+        Cursor cursor = null;
+        try {
             cursor = mDatabase.rawQuery(
-                    "SELECT id, code, marker, note_ru AS note, prod, name " +
+                    "SELECT _id, body, label, func, prod, name " +
                          "FROM COMPONENTS " +
-                         "WHERE marker LIKE '%" + sMarker + "%' " +
-                            (sw_name ?      "OR name LIKE '%" + sMarker + "%' "   : " ") +
-                            (sw_function ?  "OR note_ru LIKE '%" + sMarker + "%'" : ""),
+                         "WHERE label LIKE '%" + sLabel + "%' " +
+                            (sw_name ?      "OR name LIKE '%" + sLabel + "%' " : " ") +
+                            (sw_function ?  "OR func LIKE '%" + sLabel + "%'"  : " ") ,
                     null);
-        } else {
-            cursor = mDatabase.rawQuery(
-                    "SELECT id, code, marker, note, prod, name " +
-                         "FROM COMPONENTS " +
-                         "WHERE marker LIKE '%" + sMarker + "%' " +
-                            (sw_name ?      "OR name LIKE '%" + sMarker + "%' " : " ") +
-                            (sw_function ?  "OR note LIKE '%" + sMarker + "%'"  : " ") ,
-                    null);
+        }catch (Exception e) {
+            System.out.println(e.getMessage());
         }
-        cursor.moveToFirst();
-        while (!cursor.isAfterLast()) {
-            component = new Component(cursor.getInt(0), cursor.getString(1), cursor.getString(2), cursor.getString(3));
-            component.setProd(cursor.getString(4));
-            component.setName(cursor.getString(5));
-            componentList.add(component);
-            cursor.moveToNext();
+        if (cursor != null) {
+            cursor.moveToFirst();
+            while (!cursor.isAfterLast()) {
+                component = new Component(cursor.getInt(0), cursor.getString(1), cursor.getString(2), cursor.getString(3));
+                component.setProd(cursor.getString(4));
+                component.setName(cursor.getString(5));
+                componentList.add(component);
+                cursor.moveToNext();
+            }
+            cursor.close();
         }
-        cursor.close();
         closeDatabase();
         return componentList;
     }
@@ -220,24 +210,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public Component getComponent(String ID) {
         Component component = null;
         openDatabase();
-        Cursor cursor;
-        if (is_ru == true) {
+        Cursor cursor = null;
+        try {
             cursor = mDatabase.rawQuery(
-                    "SELECT id, name, code, marker, prod, note_ru AS note, datasheet, " +
+                    "SELECT _id, name, body, label,  prod, func, datasheet, " +
                             "favorite, islocal " +
                          "FROM COMPONENTS " +
-                         "WHERE ID = "+ID,
+                         "WHERE _ID = "+ID,
                     null);
-        } else {
-            cursor = mDatabase.rawQuery(
-                    "SELECT id, name, code, marker, prod, note,  datasheet, " +
-                            "favorite, islocal " +
-                         "FROM COMPONENTS " +
-                         "WHERE ID = "+ID,
-                    null);
-        }
+    }catch (Exception e) {
+        System.out.println(e.getMessage());
+    }
+        if (cursor != null)
+
+    {
         cursor.moveToFirst();
-        if (cursor.getCount()>0) {
+        if (cursor.getCount() > 0) {
             component = new Component(cursor.getInt(0),
                     cursor.getString(1),
                     cursor.getString(2),
@@ -249,7 +237,32 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             component.set_islcal(cursor.getInt(8));
         }
         cursor.close();
+    }
         closeDatabase();
         return component;
     }
+
+    // Возвращает являеться ли SMD избранным (-1 - если воникла ошибка)
+    public int getIsFavoriteCmp(String ID) {
+        Component component = null;
+        openDatabase();
+        Cursor cursor = null;
+        int res = -1;
+        try {
+            cursor = mDatabase.rawQuery("SELECT favorite FROM COMPONENTS WHERE _ID = "+ID,
+                    null);
+        }catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        if (cursor != null) {
+            cursor.moveToFirst();
+            if (cursor.getCount() > 0) {
+                res = cursor.getInt(0);
+            }
+            cursor.close();
+        }
+        closeDatabase();
+        return res;
+    }
+
 }

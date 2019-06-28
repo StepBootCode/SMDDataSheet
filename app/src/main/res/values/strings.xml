@@ -27,13 +27,12 @@
     <string name="menu_settings">Settings</string>
 
 
-
     <!-- Strings related to Settings -->
     <string name="pref_title_system_sync_settings">System sync settings</string>
     <string name="pref_title_local">Enable RU loc.</string>
     <string name="pref_description_local">You need to restart the application</string>
-    <string name="pref_title_cash">Cache datasheets</string>
-    <string name="pref_description_cash">Download DataSheets into the "/Documents/DataSheets" directory</string>
+    <string name="pref_title_cache">Cache datasheets</string>
+    <string name="pref_description_cache">Cache DataSheets into directory</string>
     <string name="pref_title_datasheet_save_path">DataSheets save path</string>
     <string name="pref_search">Search (default: by labeling)</string>
     <string name="pref_search_by_name">Search by name</string>
@@ -42,7 +41,16 @@
     <!-- Strings related to Toast and messages -->
     <string name="toast_copy_succes">Copy database succes!</string>
     <string name="toast_copy_error">Copy data error!</string>
-    <string name="toast_pdf_not_install">PDF Reader not install</string>
+    <string name="toast_pdf_not_install">No PDF Viewer Installed</string>
+    <string name="toast_smd_not_found">Information by SMD not found</string>
+    <string name="button_save_smd">Save SMD</string>
+    <string name="toast_not_filled_name">Not filled \"Name\" field</string>
+    <string name="toast_not_filled_label">Not filled \"Label\" field</string>
+    <string name="toast_not_filled_body">Not filled \"Body\" field</string>
+    <string name="toast_not_filled_func">Not filled \"Function\" field</string>
+    <string name="toast_not_pdf_file">PDF file not found</string>
+    <string name="toast_success_add_favorites">Successful add to favorites</string>
+    <string name="toast_success_remove_favorites">Successful remove to favorites</string>
 
 
 </resources>

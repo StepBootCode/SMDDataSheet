@@ -57,14 +57,14 @@ public class ListComponentAdapter extends BaseAdapter {
         TextView tvNote     = (TextView)v.findViewById(R.id.tvNote);
         TextView tvName     = (TextView)v.findViewById(R.id.tvName);
 
-        tvCode.setText(mComponentList.get(position).getCode());
-        tvMarker.setText(" ["+mComponentList.get(position).getMarker()+"] ");
-        tvNote.setText(mComponentList.get(position).getNote()+" ("+mComponentList.get(position).getProd()+")");
+        tvCode.setText(mComponentList.get(position).getBody());
+        tvMarker.setText(" ["+mComponentList.get(position).getLabel()+"] ");
+        tvNote.setText(mComponentList.get(position).getFunc()+" ("+mComponentList.get(position).getProd()+")");
         tvName.setText(mComponentList.get(position).getName());
 
         // Код выводит картинку из ресурсов приложения, --------------------------------------------
         // заменяем - на _ так как - нельзя испеользовать в файлах
-        String sCode = mComponentList.get(position).getCode().replace("-","_").toLowerCase();
+        String sCode = mComponentList.get(position).getBody().replace("-","_").toLowerCase();
         ImageView  mImageView = (ImageView) v.findViewById(R.id.ivCode);
         int id = mContext.getResources().getIdentifier("ru.bootcode.smddatasheet:drawable/" + sCode, null, null);
         mImageView.setImageResource(id);

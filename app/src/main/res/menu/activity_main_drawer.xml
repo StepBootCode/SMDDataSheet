@@ -7,11 +7,11 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/nav_home"
-            android:icon="@android:drawable/ic_menu_share"
+            android:icon="@drawable/ic_clear"
             android:title="@string/menu_home" />
         <item
             android:id="@+id/nav_favorites"
-            android:icon="@android:drawable/btn_star"
+            android:icon="@drawable/ic_favorite_off"
             android:title="@string/menu_favorite" />
     </group>
 
@@ -19,11 +19,11 @@
         <menu>
             <item
                 android:id="@+id/nav_add"
-                android:icon="@drawable/ic_menu_slideshow"
+                android:icon="@drawable/ic_add_smd"
                 android:title="@string/menu_add" />
             <item
                 android:id="@+id/nav_edit"
-                android:icon="@drawable/ic_menu_send"
+                android:icon="@drawable/ic_edit"
                 android:title="@string/menu_edit" />
         </menu>
     </item>
@@ -31,11 +31,11 @@
         <menu>
             <item
                 android:id="@+id/nav_settings"
-                android:icon="@drawable/ic_menu_manage"
+                android:icon="@drawable/ic_settings"
                 android:title="@string/menu_tools" />
             <item
                 android:id="@+id/nav_update"
-                android:icon="@android:drawable/ic_popup_sync"
+                android:icon="@drawable/ic_update"
                 android:title="@string/menu_update" />
         </menu>
     </item>

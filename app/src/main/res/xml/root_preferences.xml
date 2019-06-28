@@ -1,30 +1,26 @@
-<androidx.preference.PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <SwitchPreference
         app:defaultValue="false"
-        app:key="ru_switch"
-        app:summary="@string/pref_description_local"
-        app:title="@string/pref_title_local" />
+        app:key="keyCache"
+        app:summary="@string/pref_description_cache"
+        app:title="@string/pref_title_cache" />
+    <ru.bootcode.smddatasheet.ExEditTextPreference
+        app:enabled="true"
+        app:singleLine="true"
+        app:key="keySavePath"
+        app:title="@string/pref_title_datasheet_save_path" />
 
-    <SwitchPreference
-        app:defaultValue="false"
-        app:key="do_cash"
-        app:summary="@string/pref_description_cash"
-        app:title="@string/pref_title_cash" />
-    <EditTextPreference
-        app:enabled="false"
-        app:key="savepath"
-        app:defaultValue="/"
-        app:title="@string/pref_title_datasheet_save_path">
-    </EditTextPreference>
     <PreferenceCategory app:title="Preference category">
 
 
     <SwitchPreference
-        app:key="switch_search_name"
+        app:key="keySwitchSearchName"
         app:title="@string/pref_search_by_name" />
     <SwitchPreference
         app:defaultValue="false"
-        app:key="switch_search_function"
+        app:key="keySwitchSearchFunction"
         app:title="@string/pref_search_by_function" />
-</PreferenceCategory>
+
+    </PreferenceCategory>
 </androidx.preference.PreferenceScreen>

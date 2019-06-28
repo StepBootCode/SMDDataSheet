@@ -14,6 +14,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
+        android:choiceMode="singleChoice"
         app:layout_constraintBottom_toTopOf="@+id/constraintLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -32,58 +33,35 @@
             android:id="@+id/btnFav"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_marginStart="8dp"
-            android:background="@android:drawable/btn_star"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            android:background="@drawable/ic_favorite_off"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/btnDel"
             app:layout_constraintTop_toTopOf="parent" />
 
         <Button
             android:id="@+id/btnDel"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginLeft="16dp"
-            android:background="@android:drawable/ic_menu_delete"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            android:background="@drawable/ic_delete"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/btnFav"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <Button
-            android:id="@+id/btnAdd"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginLeft="16dp"
-            android:background="@android:drawable/ic_menu_add"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/btnEdit"
+            app:layout_constraintEnd_toStartOf="@+id/btnEdit"
             app:layout_constraintTop_toTopOf="parent" />
 
         <Button
             android:id="@+id/btnEdit"
             android:layout_width="45dp"
             android:layout_height="45dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginLeft="16dp"
-            android:background="@android:drawable/ic_menu_edit"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/btnDel"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <Button
-            android:id="@+id/btnClose"
-            android:layout_width="0dp"
-            android:layout_height="52dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginLeft="16dp"
-            android:layout_marginEnd="8dp"
-            android:background="@android:drawable/dialog_holo_light_frame"
-            android:text="Close"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            android:background="@drawable/ic_edit"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/btnAdd"
             app:layout_constraintTop_toTopOf="parent" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

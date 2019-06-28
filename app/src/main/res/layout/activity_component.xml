@@ -13,12 +13,17 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center|top"
-        android:elevation="1dp"
         android:gravity="center"
+        android:shadowColor="#000000"
+        android:shadowDx="2"
+        android:shadowDy="2"
         android:text="------------------"
-        android:textColor="@android:color/holo_orange_dark"
+        android:outlineProvider="bounds"
+        android:textColor="#ff8800"
         android:textSize="20sp" />
-
+    <View
+        android:layout_width="wrap_content"
+        android:layout_height="4dp" />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -41,7 +46,10 @@
             android:textSize="18sp" />
 
     </LinearLayout>
-
+    <View
+        android:layout_width="wrap_content"
+        android:background="@drawable/icshape_border_bottom"
+        android:layout_height="1dp" />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -64,7 +72,10 @@
             android:textSize="18sp" />
 
     </LinearLayout>
-
+    <View
+        android:layout_width="wrap_content"
+        android:background="@drawable/icshape_border_bottom"
+        android:layout_height="1dp" />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -88,6 +99,10 @@
             android:textSize="18sp" />
 
     </LinearLayout>
+    <View
+        android:layout_width="wrap_content"
+        android:background="@drawable/icshape_border_bottom"
+        android:layout_height="1dp" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -113,33 +128,22 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_gravity="bottom"
-            android:layout_marginEnd="8dp"
             android:layout_marginBottom="16dp"
-            android:background="@android:drawable/ic_menu_gallery"
+            android:background="@drawable/ic_pdf_open"
             ads:layout_constraintBottom_toTopOf="@+id/adView"
-            ads:layout_constraintEnd_toEndOf="parent" />
-
-        <Button
-            android:id="@+id/btnSave"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginRight="8dp"
-            android:layout_marginBottom="16dp"
-            android:background="@android:drawable/ic_menu_save"
-            ads:layout_constraintBottom_toTopOf="@+id/btnFavorite"
-            ads:layout_constraintEnd_toEndOf="parent" />
+            ads:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginRight="8dp" />
 
         <Button
             android:id="@+id/btnFavorite"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_marginEnd="8dp"
             android:layout_marginBottom="16dp"
             android:layout_weight="1"
-            android:background="@android:drawable/btn_star_big_on"
+            android:background="@drawable/ic_favorite_off"
             ads:layout_constraintBottom_toTopOf="@+id/btnDataSheet"
-            ads:layout_constraintEnd_toEndOf="parent" />
+            ads:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginRight="8dp" />
 
         <com.google.android.gms.ads.AdView
             android:id="@+id/adView"

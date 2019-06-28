@@ -32,8 +32,8 @@
     <string name="pref_title_system_sync_settings">Синхронизировать настройки</string>
     <string name="pref_title_local">База данных на русском</string>
     <string name="pref_description_local">Необходим перезапуск прложения</string>
-    <string name="pref_title_cash">Кешировать datasheets</string>
-    <string name="pref_description_cash">Загружает DataSheet в каталог /Documents/DataSheet для повторного использования без повторной загрузки</string>
+    <string name="pref_title_cache">Кешировать datasheets</string>
+    <string name="pref_description_cache">Кешировать DataSheet в каталог</string>
     <string name="pref_title_datasheet_save_path">Каталог сохранения DataSteet`ов</string>
     <string name="pref_search">Поиск (по умолчанию: по маркировке)</string>
     <string name="pref_search_by_name">Искать по наименованию</string>
@@ -43,4 +43,13 @@
     <string name="toast_copy_succes">База данных скопирована!</string>
     <string name="toast_copy_error">Ошибка копирования базы данных!</string>
     <string name="toast_pdf_not_install">Не установлен PDF Reader!</string>
+    <string name="toast_smd_not_found">Информация о SMD не найдена</string>
+    <string name="button_save_smd">Сохранить SMD</string>
+    <string name="toast_not_filled_name">Не заполненное поле «Имя»</string>
+    <string name="toast_not_filled_label">Не заполненное поле «Метка»</string>
+    <string name="toast_not_filled_func">Не заполненное поле «Назначение»</string>
+    <string name="toast_not_filled_body">Не заполненное поле «Корпус»</string>
+    <string name="toast_not_pdf_file">PDF файл не найден</string>
+    <string name="toast_success_add_favorites">Успешное добавление в избранное</string>
+    <string name="toast_success_remove_favorites">Успешное удаление из избранного</string>
 </resources>
