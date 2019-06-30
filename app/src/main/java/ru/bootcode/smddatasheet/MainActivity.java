@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        lvComponents = (ListView) findViewById(R.id.lvMain);
+        lvComponents = findViewById(R.id.lvMain);
         // запросим кеш по умолчанию
         String sSavePathDef = Utils.getDefaultCacheDir();
 
@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity
         sw_search_name      = sp.getBoolean("keySwitchSearchName", false);
         sw_search_function  = sp.getBoolean("keySwitchSearchFunction", false);
         //do_cash           = sp.getBoolean("keyCache", false);
-        save_path         = sp.getString("keySavePath", sSavePathDef);
+        save_path           = sp.getString("keySavePath", sSavePathDef);
 
         // Тут бы проверить savePath на доступность и др. хрень. (в утилитах конечно)
 
@@ -197,7 +197,7 @@ public class MainActivity extends AppCompatActivity
                 mDialogBuilder.setView(promptsView);
 
                 //Настраиваем отображение поля для ввода текста в открытом диалоге
-                final EditText userInput = (EditText) promptsView.findViewById(R.id.etMarker);
+                final EditText userInput = promptsView.findViewById(R.id.etMarker);
 
                 //Настраиваем сообщение в диалоговом окне
                 mDialogBuilder
@@ -301,10 +301,31 @@ public class MainActivity extends AppCompatActivity
                 newValues.put("label",      data.getStringExtra("label"));
                 newValues.put("body",       data.getStringExtra("body"));
                 newValues.put("func",       data.getStringExtra("func"));
-                newValues.put("datasheet",  data.getStringExtra("pdf"));
+                newValues.put("datasheet",  data.getStringExtra("pdfname"));
                 newValues.put("prod",       data.getStringExtra("prod"));
                 newValues.put("favorite",   1);
                 newValues.put("islocal",    1);
+
+                String dst = save_path+"/"+data.getStringExtra("pdfname");
+                if (!data.getStringExtra("pdf").equals(dst)) {
+                    Observable.just(Utils.copyFile(data.getStringExtra("pdf"), dst))
+                            .subscribe(new Observer<Boolean>() {
+                                @Override
+                                public void onCompleted() {
+                                    Utils.showToast(context, "File is cached");
+                                }
+
+                                @Override
+                                public void onError(Throwable e) {
+
+                                }
+
+                                @Override
+                                public void onNext(Boolean aBoolean) {
+
+                                }
+                            });
+                }
 
                 Observable.from(new ContentValues[]{newValues})
                         .subscribe(new Observer<ContentValues>() {

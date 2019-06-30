@@ -20,19 +20,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     // Константы указывающие на базу данных в локальном каталоге приложения
     private static final String DBNAME = "smd.db";
-    private static final String DBLOCATION = "/data/data/ru.bootcode.smddatasheet/databases/";
-
+    //private static final String DBLOCATION = /data/data/ru.bootcode.smddatasheet/databases/smd.db
     private Context mContext;
     private SQLiteDatabase mDatabase;
 
-    public static String getDBNAME() {
+    static String getDBNAME() {
         return DBNAME;
     }
-    public static String getDBLOCATION() {
-        return DBLOCATION;
+
+    static String getDBLOCATION(Context context) {
+        return context.getDatabasePath(DBNAME).getPath();
     }
 
-    public DatabaseHelper(Context context) {
+    DatabaseHelper(Context context) {
         super(context, DBNAME, null, VERSION);
         this.mContext = context;
     }
@@ -47,7 +47,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     }
 
-    public void openDatabase() {
+    private void openDatabase() {
         String dbPath = mContext.getDatabasePath(DBNAME).getPath();
         if(mDatabase != null && mDatabase.isOpen()) {
             return;
@@ -59,14 +59,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    public void closeDatabase() {
+    private void closeDatabase() {
         if(mDatabase!=null) {
             mDatabase.close();
         }
     }
 
     // Функция проверяет изменилась ли версия базы данных
-    public Boolean getIsActualVersion() {
+    Boolean getIsActualVersion() {
         int v = 0;
         Boolean actual = false;
         try {
@@ -87,8 +87,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     // Возващает полный несортикрованный список компонентов
-    public List<Component> getListComponent() {
-        Component component = null;
+    List<Component> getListComponent() {
+        Component component;
         List<Component> componentList = new ArrayList<>();
         openDatabase();
         Cursor cursor = null;
@@ -117,8 +117,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     // Возващает полный несортикрованный список избранных компонентов
-    public List<Component> getListFavorites() {
-        Component component = null;
+    List<Component> getListFavorites() {
+        Component component;
         List<Component> componentList = new ArrayList<>();
         openDatabase();
         Cursor cursor = null;
@@ -146,8 +146,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     // Возващает полный несортикрованный список компонентов
-    public List<Component> getListLocals() {
-        Component component = null;
+    List<Component> getListLocals() {
+        Component component;
         List<Component> componentList = new ArrayList<>();
         openDatabase();
         Cursor cursor = null;
@@ -175,8 +175,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     // Возвращает список компонентов после поиска по ключевому слову
-    public List<Component> getFindComponent(String sLabel,Boolean sw_name, Boolean  sw_function) {
-        Component component = null;
+    List<Component> getFindComponent(String sLabel, Boolean sw_name, Boolean sw_function) {
+        Component component;
         List<Component> componentList = new ArrayList<>();
         openDatabase();
         Cursor cursor = null;
@@ -207,7 +207,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     // Возвращает Компонент по его ID в базе
-    public Component getComponent(String ID) {
+    Component getComponent(String ID) {
         Component component = null;
         openDatabase();
         Cursor cursor = null;
@@ -243,7 +243,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     // Возвращает являеться ли SMD избранным (-1 - если воникла ошибка)
-    public int getIsFavoriteCmp(String ID) {
+    int getIsFavoriteCmp(String ID) {
         Component component = null;
         openDatabase();
         Cursor cursor = null;

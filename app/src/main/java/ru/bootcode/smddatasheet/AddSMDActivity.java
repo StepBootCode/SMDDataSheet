@@ -6,8 +6,10 @@ import androidx.preference.Preference;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.view.View;
 import android.widget.Button;
@@ -42,12 +44,17 @@ public class AddSMDActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_smd);
-        etName = (EditText) findViewById(R.id.etName);
-        etLabel = (EditText) findViewById(R.id.etLabel);
-        etBody = (EditText) findViewById(R.id.etBody);
-        etFunc = (EditText) findViewById(R.id.etFunc);
-        etProd = (EditText) findViewById(R.id.etProd);
-        tvPDF = (TextView) findViewById(R.id.tvPDF);
+
+        // Получаем SharedPreferences (Сохраненнве настройки приложения) ---------------------------
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        final String keySavePath  = sp.getString("keySavePath", Utils.getDefaultCacheDir());
+
+        etName = findViewById(R.id.etName);
+        etLabel = findViewById(R.id.etLabel);
+        etBody = findViewById(R.id.etBody);
+        etFunc = findViewById(R.id.etFunc);
+        etProd = findViewById(R.id.etProd);
+        tvPDF = findViewById(R.id.tvPDF);
 
         Intent intent = getIntent();
         iIDComp     = intent.getIntExtra("id",0);
@@ -55,30 +62,36 @@ public class AddSMDActivity extends AppCompatActivity {
             final DatabaseHelper dbHelper = new DatabaseHelper(AddSMDActivity.this);
             dbHelper.getReadableDatabase();
 
-            Single.just( dbHelper.getComponent(String.valueOf(iIDComp)))//.fromCallable(callable)
+            Observable.just( dbHelper.getComponent(String.valueOf(iIDComp)))//.fromCallable(callable)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new SingleSubscriber<Component>() {
+                    .subscribe(new Observer<Component>() {
                         @Override
-                        public void onSuccess(Component value) {
+                        public void onCompleted() {
+
+                        }
+                        @Override
+                        public void onError(Throwable error) { }
+
+                        @Override
+                        public void onNext(Component value) {
                             etName.setText(value.getName());
                             etBody.setText(value.getBody());
                             etLabel.setText(value.getLabel());
                             etFunc.setText(value.getFunc());
                             etProd.setText(value.getProd());
-                            String sPDF = value.getDatasheet();
+                            String sPDF = keySavePath +"/"+value.getDatasheet();
                             tvPDF.setText(sPDF);
                             pdfFile = new File(sPDF);
                             if (!pdfFile.isFile()) {
                                 pdfFile = null;
+                                tvPDF.setText(R.string.toast_not_pdf_file);
                             }
                         }
-                        @Override
-                        public void onError(Throwable error) { }
                     });
         }
 
-        Button btSelectPDF = (Button) findViewById(R.id.btSelectPDF);
+        Button btSelectPDF = findViewById(R.id.btSelectPDF);
         btSelectPDF.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -88,12 +101,17 @@ public class AddSMDActivity extends AppCompatActivity {
             }
         });
 
-        Button btSave = (Button) findViewById(R.id.btSave);
+        Button btSave = findViewById(R.id.btSave);
         btSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (testText())
                 {
+                    String sName = pdfFile.getName();
+                    sName = sName.replace("~","0")
+                            .replace("@","1")
+                            .replace("#","2");
+
                     Intent result = new Intent("ru.bootcode.smddatasheet");//
                     Bundle extras = new Bundle();
                     extras.putInt("id", iIDComp);
@@ -103,6 +121,7 @@ public class AddSMDActivity extends AppCompatActivity {
                     extras.putString("func", etFunc.getText().toString());
                     extras.putString("prod", etProd.getText().toString());
                     extras.putString("pdf", pdfFile.getAbsolutePath());
+                    extras.putString("pdfname", sName);
                     result.putExtras(extras);
                     setResult(RESULT_OK, result);
                     finish();

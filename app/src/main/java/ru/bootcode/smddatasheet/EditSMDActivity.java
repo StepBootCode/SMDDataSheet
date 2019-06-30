@@ -5,11 +5,13 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -32,6 +34,7 @@ public class EditSMDActivity extends AppCompatActivity  {
     final Context context = this;
     ListView lvDB;
     long selectedID=0;
+    String keySavePath;
     private DatabaseHelper mDBHelper;
     private ListComponentAdapter adapter;
     private List<Component> mComponentList;
@@ -48,9 +51,12 @@ public class EditSMDActivity extends AppCompatActivity  {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_smd);
 
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        keySavePath  = sp.getString("keySavePath", Utils.getDefaultCacheDir());
+
         mDBHelper = new DatabaseHelper(this);
 
-        btnEdit = (Button) findViewById(R.id.btnEdit);
+        btnEdit = findViewById(R.id.btnEdit);
         btnEdit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -65,7 +71,7 @@ public class EditSMDActivity extends AppCompatActivity  {
         });
 
 
-        btnFavorite = (Button) findViewById(R.id.btnFav);
+        btnFavorite = findViewById(R.id.btnFav);
         btnFavorite.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -115,7 +121,7 @@ public class EditSMDActivity extends AppCompatActivity  {
             }
         });
 
-        btnDel = (Button) findViewById(R.id.btnDel);
+        btnDel = findViewById(R.id.btnDel);
         btnDel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -146,7 +152,7 @@ public class EditSMDActivity extends AppCompatActivity  {
         });
 
         // Выводим список компонентов --------------------------------------------------------------
-        lvDB = (ListView) findViewById(R.id.lvDB);
+        lvDB = findViewById(R.id.lvDB);
         Observable.just(mDBHelper.getListLocals())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -230,11 +236,31 @@ public class EditSMDActivity extends AppCompatActivity  {
                 newValues.put("label",      data.getStringExtra("label"));
                 newValues.put("body",       data.getStringExtra("body"));
                 newValues.put("func",       data.getStringExtra("func"));
-                newValues.put("datasheet",  data.getStringExtra("pdf"));
+                newValues.put("datasheet",  data.getStringExtra("pdfname"));
                 newValues.put("prod",       data.getStringExtra("prod"));
                 newValues.put("favorite",   1);
                 newValues.put("islocal",    1);
 
+                String dst = keySavePath+"/"+data.getStringExtra("pdfname");
+                if (!data.getStringExtra("pdf").equals(dst)) {
+                    Observable.just(Utils.copyFile(data.getStringExtra("pdf"), dst))
+                            .subscribe(new Observer<Boolean>() {
+                                @Override
+                                public void onCompleted() {
+                                    Utils.showToast(context, "File is cached");
+                                }
+
+                                @Override
+                                public void onError(Throwable e) {
+
+                                }
+
+                                @Override
+                                public void onNext(Boolean aBoolean) {
+
+                                }
+                            });
+                }
                 Observable.from(new ContentValues[]{newValues})
                         .subscribe(new Observer<ContentValues>() {
                             @Override

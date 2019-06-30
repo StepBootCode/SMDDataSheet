@@ -1,6 +1,7 @@
 package ru.bootcode.smddatasheet;
 
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,14 +22,14 @@ public class ListComponentAdapter extends BaseAdapter {
     private int selections;
     private List<Component> mComponentList;
 
-    public ListComponentAdapter(Context mContext, List<Component> mComponentList) {
+    ListComponentAdapter(Context mContext, List<Component> mComponentList) {
         this.mContext = mContext;
         this.mComponentList = mComponentList;
 
         this.selections = -1;
     }
 
-    public void switchSelection(int position){
+    void switchSelection(int position){
         this.selections = position;
         //оповещаем адаптер об изменениях, чтобы он обновил все элементы списка.
         notifyDataSetChanged();
@@ -51,10 +52,11 @@ public class ListComponentAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
+        @SuppressLint("ViewHolder")
         View v = View.inflate(mContext, R.layout.item, null);
 
         // Черезстрочно закрашиваем выводимый список -----------------------------------------------
-        LinearLayout layout = (LinearLayout) v.findViewById(R.id.linlayBackground);
+        LinearLayout layout = v.findViewById(R.id.linlayBackground);
         if ((position % 2) == 0) {
             layout.setBackgroundColor(0xFFFFFFFF);
         } else {
@@ -67,20 +69,20 @@ public class ListComponentAdapter extends BaseAdapter {
         }
 
         // Вывод в список информации по компонентам ------------------------------------------------
-        TextView tvCode     = (TextView)v.findViewById(R.id.tvCode);
-        TextView tvMarker   = (TextView)v.findViewById(R.id.tvMarker);
-        TextView tvNote     = (TextView)v.findViewById(R.id.tvNote);
-        TextView tvName     = (TextView)v.findViewById(R.id.tvName);
+        TextView tvCode     = v.findViewById(R.id.tvCode);
+        TextView tvMarker   = v.findViewById(R.id.tvMarker);
+        TextView tvNote     = v.findViewById(R.id.tvNote);
+        TextView tvName     = v.findViewById(R.id.tvName);
 
         tvCode.setText(mComponentList.get(position).getBody());
-        tvMarker.setText(" ["+mComponentList.get(position).getLabel()+"] ");
-        tvNote.setText(mComponentList.get(position).getFunc()+" ("+mComponentList.get(position).getProd()+")");
+        tvMarker.setText(String.format(" [%s] ", mComponentList.get(position).getLabel()));
+        tvNote.setText(String.format("%s (%s)", mComponentList.get(position).getFunc(), mComponentList.get(position).getProd()));
         tvName.setText(mComponentList.get(position).getName());
 
         // Код выводит картинку из ресурсов приложения, --------------------------------------------
         // заменяем - на _ так как - нельзя испеользовать в файлах
         String sCode = mComponentList.get(position).getBody().replace("-","_").toLowerCase();
-        ImageView  mImageView = (ImageView) v.findViewById(R.id.ivCode);
+        ImageView  mImageView = v.findViewById(R.id.ivCode);
         int id = mContext.getResources().getIdentifier("ru.bootcode.smddatasheet:drawable/" + sCode, null, null);
         mImageView.setImageResource(id);
 

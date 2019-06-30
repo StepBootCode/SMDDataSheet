@@ -23,7 +23,7 @@ public class ExEditTextPreference extends DialogPreference {
     private ExEditTextPreference.OnBindEditTextListener mOnBindEditTextListener;
 
     @SuppressLint("PrivateResource")
-    public ExEditTextPreference(Context context, AttributeSet attrs, int defStyleAttr,
+    private ExEditTextPreference(Context context, AttributeSet attrs, int defStyleAttr,
                                 int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
 
@@ -38,11 +38,11 @@ public class ExEditTextPreference extends DialogPreference {
         a.recycle();
     }
 
-    public ExEditTextPreference(Context context, AttributeSet attrs, int defStyleAttr) {
+    private ExEditTextPreference(Context context, AttributeSet attrs, int defStyleAttr) {
         this(context, attrs, defStyleAttr, 0);
     }
 
-    public ExEditTextPreference(Context context, AttributeSet attrs) {
+    private ExEditTextPreference(Context context, AttributeSet attrs) {
         this(context, attrs, TypedArrayUtils.getAttr(context, R.attr.editTextPreferenceStyle,
                 android.R.attr.editTextPreferenceStyle));
     }
@@ -56,7 +56,7 @@ public class ExEditTextPreference extends DialogPreference {
      *
      * @param text The text to save
      */
-    public void setText(String text) {
+    void setText(String text) {
         final boolean wasBlocking = shouldDisableDependents();
 
         mText = text;
@@ -76,7 +76,7 @@ public class ExEditTextPreference extends DialogPreference {
      *
      * @return The current preference value
      */
-    public String getText() {
+    String getText() {
         return mText;
     }
 
@@ -184,17 +184,18 @@ public class ExEditTextPreference extends DialogPreference {
 
         private SimpleSummaryProvider() {}
 
-        public static ExEditTextPreference.SimpleSummaryProvider getInstance() {
+        private static ExEditTextPreference.SimpleSummaryProvider getInstance() {
             if (sSimpleSummaryProvider == null) {
                 sSimpleSummaryProvider = new ExEditTextPreference.SimpleSummaryProvider();
             }
             return sSimpleSummaryProvider;
         }
 
+
         @Override
         public CharSequence provideSummary(ExEditTextPreference preference) {
             if (TextUtils.isEmpty(preference.getText())) {
-                return (preference.getContext().getString(R.string.not_set));
+                return (preference.getContext().getString(R.string.text_default));
             } else {
                 return preference.getText();
             }

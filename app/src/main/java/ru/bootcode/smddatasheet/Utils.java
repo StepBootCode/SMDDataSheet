@@ -6,6 +6,7 @@ import android.widget.Toast;
 import androidx.annotation.StringRes;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -16,7 +17,7 @@ class Utils {
     // Провера каталога на запись
     static boolean testDirOnWrite(String sDir) {
         String str = "";
-        File testfile = null;
+        File testfile;
         try {
             File root = new File(sDir);
             if (!root.exists()) {
@@ -27,18 +28,16 @@ class Utils {
             writer.append(str);
             writer.flush();
             writer.close();
+
         } catch (IOException ignored) {
             return false;
         }
-        if (testfile == null) return false;
-        boolean res = testfile.exists();
-        testfile.delete();
-        return res;
+        return testfile.delete();
     }
 
     // Получение каталога для хранения кеша
     static String getDefaultCacheDir(){
-        String fl = "/bootcode";
+        String fl;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
             fl = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).toString();
         }  else {
@@ -59,11 +58,11 @@ class Utils {
             // Открываем поток - Откуда копируем (из каталога assets)
             InputStream inputStream = context.getAssets().open(DatabaseHelper.getDBNAME());
             // Открываем поток - Куда копируем (каталог программы)
-            String outFileName      = DatabaseHelper.getDBLOCATION() + DatabaseHelper.getDBNAME();
+            String outFileName      = DatabaseHelper.getDBLOCATION(context);
             OutputStream outputStream = new FileOutputStream(outFileName);
             // Стандартное копирование потоков
             byte[]buff = new byte[1024];
-            int length = 0;
+            int length;
             while ((length = inputStream.read(buff)) > 0) {
                 outputStream.write(buff, 0, length);
             }
@@ -75,6 +74,29 @@ class Utils {
             return false;
         }
     }
+
+    // Копирование файлов
+    static boolean copyFile(String src, String dst) {
+        try {
+            // Открываем поток - Откуда копируем (из каталога assets)
+            InputStream inputStream = new FileInputStream(src);
+            // Открываем поток - Куда копируем (каталог программы)
+            OutputStream outputStream = new FileOutputStream(dst);
+            // Стандартное копирование потоков
+            byte[]buff = new byte[1024];
+            int length;
+            while ((length = inputStream.read(buff)) > 0) {
+                outputStream.write(buff, 0, length);
+            }
+            outputStream.flush();
+            outputStream.close();
+            return true;
+        }catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 
     // Тост, на пряую из строки
     static void showToast(Context context, String msg) {

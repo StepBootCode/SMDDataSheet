@@ -88,7 +88,7 @@ public class ComponentActivity extends Activity {
         String sDatasheet = intent.getStringExtra("datasheet");
         iFavorite   = intent.getIntExtra("favorite",0);
         //String sProd = intent.getStringExtra("prod");
-        //int iIsLocal    = intent.getIntExtra("islocal",0);
+        final int iisLocal    = intent.getIntExtra("islocal",0);
 
         // Определяем ссылки на PDF файлы на сервере и локально
         sLinkDatasheet = LINK+sDatasheet.replace("~","0")
@@ -114,49 +114,41 @@ public class ComponentActivity extends Activity {
         ((ImageView) findViewById(R.id.ivCode)).setImageResource(id);
 
         // создаем обработчик нажатия кнопки загрузки PDF ------------------------------------------
-        btnDataSheet = (Button) findViewById(R.id.btnDataSheet);
+        btnDataSheet = findViewById(R.id.btnDataSheet);
         btnDataSheet.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(iisLocal > 0) {
+                    File f = new File(sCacheDatasheet);
+                    if (f.exists()) // файл есть
+                        showPDFfromCache(sCacheDatasheet);
+                    else
+                        showToast(context, R.string.toast_not_pdf_file);
+
+                    return;
+                }
                 if (keyCache){
                     // Проверим наш кеш если в нем есть файл, то открывать будем его
-                    // Иначе загрузим его и потом уже откроем
-
                     File f = new File(sCacheDatasheet);
                     if (f.exists()) // файл есть
                     {
-                        try {
-                            Intent intentUrl = new Intent(Intent.ACTION_VIEW);
-                            intentUrl.setDataAndType(Uri.parse(sCacheDatasheet), "application/pdf");
-                            intentUrl.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                            if (intentUrl.resolveActivity(getPackageManager()) != null) {
-                                startActivity(intentUrl);
-                            } else {
-                                showToast(context, R.string.toast_pdf_not_install);
-                                showPDFFile(sLinkDatasheet);
-                            }
-                        } catch (ActivityNotFoundException e) {
-                            showToast(context, R.string.toast_pdf_not_install);
-                        }
+                        if (!showPDFfromCache(sCacheDatasheet))  showPDFfromURL(sLinkDatasheet);
                     }else{
-                        showPDFFile(sLinkDatasheet);
-
+                        showPDFfromURL(sLinkDatasheet);
                         // Загружаем файл в кеш
                         downloadPDFFile(sLinkDatasheet, sCacheDatasheet);
                     }
                 } else {
-                    showPDFFile(sLinkDatasheet);
+                    showPDFfromURL(sLinkDatasheet);
                 }
             }
         });
 
         // Обработка кнопки Избранное --------------------------------------------------------------
-        btnFavorite = (Button) findViewById(R.id.btnFavorite);
-        if (iFavorite > 0) {
-            btnFavorite.setBackgroundResource(R.drawable.ic_favorite_on);
-        } else {
-            btnFavorite.setBackgroundResource(R.drawable.ic_favorite_off);
-        }
+        btnFavorite = findViewById(R.id.btnFavorite);
+        if (iFavorite > 0)  btnFavorite.setBackgroundResource(R.drawable.ic_favorite_on);
+            else            btnFavorite.setBackgroundResource(R.drawable.ic_favorite_off);
+
         btnFavorite.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -202,7 +194,7 @@ public class ComponentActivity extends Activity {
         });
 
         // Рекламма, без нее ни как ) --------------------------------------------------------------
-        mAdView = (AdView) findViewById(R.id.adView);
+        mAdView = findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
         mAdView.setAdListener(new AdListener() {
@@ -212,14 +204,30 @@ public class ComponentActivity extends Activity {
         });
     }
 
-
     private static final int FILE_SELECT_CODE = 0;
 
-    private void showPDFFile(String url) {
+    private void showPDFfromURL(String url) {
         String format = "https://drive.google.com/viewerng/viewer?embedded=true&url=%s";
         String fullPath = String.format(Locale.ENGLISH, format, url);
         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(fullPath));
         startActivity(browserIntent);
+    }
+
+    private boolean showPDFfromCache(String f){
+        try {
+            Intent intentUrl = new Intent(Intent.ACTION_VIEW);
+            intentUrl.setDataAndType(Uri.parse(f), "application/pdf");
+            intentUrl.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            if (intentUrl.resolveActivity(getPackageManager()) != null) {
+                startActivity(intentUrl);
+            } else {
+                showToast(context, R.string.toast_pdf_not_install);
+                return false;
+            }
+        } catch (ActivityNotFoundException e) {
+            showToast(context, R.string.toast_pdf_not_install);
+        }
+        return true;
     }
 
     private void downloadPDFFile(String url, final String fl) {
@@ -246,7 +254,7 @@ public class ComponentActivity extends Activity {
                                     OutputStream outputStream = new FileOutputStream(fl);
                                     // Стандартное копирование потоков
                                     byte[] buff = new byte[1024];
-                                    int length = 0;
+                                    int length;
                                     while ((length = response.body().byteStream().read(buff)) > 0) {
                                         outputStream.write(buff, 0, length);
                                     }
@@ -265,7 +273,7 @@ public class ComponentActivity extends Activity {
                     }
                     @Override
                     public void onError(Throwable e) {
-                        e.printStackTrace();
+
                     }
                 });
     }
