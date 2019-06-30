@@ -22,6 +22,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -190,7 +191,8 @@ public class MainActivity extends AppCompatActivity
             public void onClick(View view) {
                 //Получаем вид с файла dialog_find.xml, который применим для диалогового окна
                 LayoutInflater li = LayoutInflater.from(context);
-                View promptsView = li.inflate(R.layout.dialog_find, null);
+                ViewGroup root = null;//findViewById(R.id.contentmain);
+                View promptsView = li.inflate(R.layout.dialog_find, root);
 
                 //Создаем AlertDialog и настраиваем вид
                 AlertDialog.Builder mDialogBuilder = new AlertDialog.Builder(context);
