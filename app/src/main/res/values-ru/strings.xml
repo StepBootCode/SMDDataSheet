@@ -52,4 +52,7 @@
     <string name="toast_not_pdf_file">PDF файл не найден</string>
     <string name="toast_success_add_favorites">Успешное добавление в избранное</string>
     <string name="toast_success_remove_favorites">Успешное удаление из избранного</string>
+    <string name="tv_prod">Производитель:</string>
+    <string name="dialog_find">Поиск SMD производится по маркировке. Вы можете включить дополнительные поля поиска в настройках</string>
+    <string name="text_default">---</string>
 </resources>

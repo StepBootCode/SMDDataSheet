@@ -44,7 +44,6 @@ import rx.schedulers.Schedulers;
 
 import static ru.bootcode.smddatasheet.Utils.showToast;
 
-
 public class ComponentActivity extends Activity {
     final Context context = this;
 
@@ -79,14 +78,6 @@ public class ComponentActivity extends Activity {
         keyCache    = sp.getBoolean("keyCache", false);
         keySavePath = sp.getString("keySavePath", Utils.getDefaultCacheDir());
 
-        // Определяем ссылки на PDF файлы на сервере и локально
-        sLinkDatasheet = LINK+sDatasheet.replace("~","0")
-                .replace("@","1")
-                .replace("#","2")+".pdf";
-        sCacheDatasheet = keySavePath +"/"+ sDatasheet.replace("~","0")
-                .replace("@","1")
-                .replace("#","2")+".pdf";
-
         // Получаем переданные из MainActivity параметры о SMD компоненте --------------------------
         Intent intent = getIntent();
         iIDComp = intent.getIntExtra("id",0);
@@ -99,6 +90,13 @@ public class ComponentActivity extends Activity {
         //String sProd = intent.getStringExtra("prod");
         //int iIsLocal    = intent.getIntExtra("islocal",0);
 
+        // Определяем ссылки на PDF файлы на сервере и локально
+        sLinkDatasheet = LINK+sDatasheet.replace("~","0")
+                .replace("@","1")
+                .replace("#","2")+".pdf";
+        sCacheDatasheet = keySavePath +"/"+ sDatasheet.replace("~","0")
+                .replace("@","1")
+                .replace("#","2")+".pdf";
         // Выводим информацию о компоненте ---------------------------------------------------------
         ((TextView) findViewById(R.id.tvNote)).setText(sFunc);
         ((TextView) findViewById(R.id.tvCode)).setText(sBody);
@@ -128,36 +126,26 @@ public class ComponentActivity extends Activity {
                     if (f.exists()) // файл есть
                     {
                         try {
-                            Uri uri = Uri.parse(sCacheDatasheet);
                             Intent intentUrl = new Intent(Intent.ACTION_VIEW);
-                            intentUrl.setDataAndType(uri, "application/pdf");
+                            intentUrl.setDataAndType(Uri.parse(sCacheDatasheet), "application/pdf");
                             intentUrl.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                             if (intentUrl.resolveActivity(getPackageManager()) != null) {
                                 startActivity(intentUrl);
                             } else {
                                 showToast(context, R.string.toast_pdf_not_install);
-                                String format = "https://drive.google.com/viewerng/viewer?embedded=true&url=%s";
-                                String fullPath = String.format(Locale.ENGLISH, format, sLinkDatasheet);
-                                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(fullPath));
-                                startActivity(browserIntent);
+                                showPDFFile(sLinkDatasheet);
                             }
                         } catch (ActivityNotFoundException e) {
                             showToast(context, R.string.toast_pdf_not_install);
                         }
                     }else{
-                        String format = "https://drive.google.com/viewerng/viewer?embedded=true&url=%s";
-                        String fullPath = String.format(Locale.ENGLISH, format, sLinkDatasheet);
-                        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(fullPath));
-                        startActivity(browserIntent);
+                        showPDFFile(sLinkDatasheet);
 
                         // Загружаем файл в кеш
                         downloadPDFFile(sLinkDatasheet, sCacheDatasheet);
                     }
                 } else {
-                    String format = "https://drive.google.com/viewerng/viewer?embedded=true&url=%s";
-                    String fullPath = String.format(Locale.ENGLISH, format, sLinkDatasheet);
-                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(fullPath));
-                    startActivity(browserIntent);
+                    showPDFFile(sLinkDatasheet);
                 }
             }
         });
@@ -224,6 +212,16 @@ public class ComponentActivity extends Activity {
         });
     }
 
+
+    private static final int FILE_SELECT_CODE = 0;
+
+    private void showPDFFile(String url) {
+        String format = "https://drive.google.com/viewerng/viewer?embedded=true&url=%s";
+        String fullPath = String.format(Locale.ENGLISH, format, url);
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(fullPath));
+        startActivity(browserIntent);
+    }
+
     private void downloadPDFFile(String url, final String fl) {
         final String[] str = {url};
         Observable.from(str)
@@ -263,7 +261,7 @@ public class ComponentActivity extends Activity {
                     }
                     @Override
                     public void onCompleted() {
-//Utils.showToast(ComponentActivity.this,"Good");
+                        //Utils.showToast(ComponentActivity.this,"Good");
                     }
                     @Override
                     public void onError(Throwable e) {
@@ -272,98 +270,5 @@ public class ComponentActivity extends Activity {
                 });
     }
 
-    class MyTask extends AsyncTask<String, Integer, Void> {
 
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
-        protected Void doInBackground(String... urls) {
-            try {
-                int cnt = 0;
-                for (String url : urls) {
-                    // загружаем файл
-                    downloadFile(url);
-                    // выводим промежуточные результаты
-                    publishProgress(++cnt);
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
-        }
-
-        @Override
-        protected void onPostExecute(Void result) {
-            super.onPostExecute(result);
-        }
-
-        private void downloadFile(String str_url) throws InterruptedException {
-            URL url;
-            HttpURLConnection urlConnection;
-            InputStream inputStream;
-            int totalSize;
-            int downloadedSize;
-            byte[] buffer;
-            int bufferLength;
-
-            File file = null;
-            FileOutputStream fos = null;
-
-            try {
-                url = new URL(str_url);
-                urlConnection = (HttpURLConnection) url.openConnection();
-
-                urlConnection.setRequestMethod("GET");
-                urlConnection.setDoOutput(true);
-                urlConnection.connect();
-
-                file = File.createTempFile("Mustachify", "download");
-                fos = new FileOutputStream(file);
-                inputStream = urlConnection.getInputStream();
-
-                totalSize = urlConnection.getContentLength();
-                downloadedSize = 0;
-
-                buffer = new byte[1024];
-                bufferLength = 0;
-
-                // читаем со входа и пишем в выход,
-                // с каждой итерацией публикуем прогресс
-                while ((bufferLength = inputStream.read(buffer)) > 0) {
-                    fos.write(buffer, 0, bufferLength);
-                    downloadedSize += bufferLength;
-                    publishProgress(downloadedSize, totalSize);
-                }
-
-                fos.close();
-                inputStream.close();
-
-                openPDF(file.toURI().toString());
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        private void openPDF(String doc){
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("path-to-document"));
-            intent.setDataAndType(Uri.parse(doc), "application/pdf");
-            PackageManager pm = getPackageManager();
-            List<ResolveInfo> activities = pm.queryIntentActivities(intent, 0);
-            if (activities.size() > 0) {
-                startActivity(intent);
-            } else {
-                // Do something else here. Maybe pop up a Dialog or Toast
-            }
-        }
-    }
 }

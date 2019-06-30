@@ -1,5 +1,6 @@
 package ru.bootcode.smddatasheet;
 
+import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.app.AlertDialog;
@@ -31,6 +32,7 @@ import com.google.android.gms.ads.MobileAds;
 import android.os.Bundle;
 
 import java.io.File;
+import java.sql.Array;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -38,6 +40,7 @@ import rx.Observable;
 import rx.Observer;
 import rx.Single;
 import rx.SingleSubscriber;
+import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
@@ -122,23 +125,27 @@ public class MainActivity extends AppCompatActivity
 
         // Запрос комонентов в из базы и передаем их адаптер (Все это под оболочкой RXJava)---------
         //сomponentList = dbHelper.getListComponent();                  - отдал под RXJava
-        Callable<List<Component>> callable = new Callable<List<Component>>() {
-            @Override
-            public List<Component> call() throws Exception {
-                return dbHelper.getListComponent();
-            }
-        };
-        Single.fromCallable(callable)
+        // Single это упрощенный Observable, он может быть уместным, если вы ожидаете одно значение,
+        // например, запрос сети, который выполняется один раз и возвращает значение или ошибку,
+        // сетевой вызов работает один раз и он уже не вернет дополнительные значения со временем.
+        // Другим примером является работа с данными из базы данных.
+        Observable.just(dbHelper.getListComponent())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new SingleSubscriber<List<Component>>() {
+                .subscribe(new Subscriber<List<Component>>() {
                     @Override
-                    public void onSuccess(List<Component> value) {
-                        adapter = new ListComponentAdapter(MainActivity.this, value);
+                    public void onNext(List<Component> components) {
+                        adapter = new ListComponentAdapter(context, components);
                         lvComponents.setAdapter(adapter);
                     }
                     @Override
-                    public void onError(Throwable error) { }
+                    public void onCompleted() {
+
+                    }
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
                 });
 
         // Создаем список и установим обработчик нажатия элемента списка ---------------------------
@@ -147,7 +154,7 @@ public class MainActivity extends AppCompatActivity
         lvComponents.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 //Intent intent = new Intent(MainActivity.this, ComponentActivity.class);
-
+                adapter.switchSelection(position);
                 //selectedComponent = dbHelper.getComponent(String.valueOf(id));
                 String[] str = {String.valueOf(id)};
                 Observable.from(str)
@@ -200,11 +207,25 @@ public class MainActivity extends AppCompatActivity
                                     public void onClick(DialogInterface dialog, int id) {
                                         //Получаем текст из отображаем в строки ввода
                                         String txt = userInput.getText().toString();
-                                        componentList = dbHelper.getFindComponent(txt,
-                                                sw_search_name,
-                                                sw_search_function);
-                                        adapter = new ListComponentAdapter(context, componentList);
-                                        lvComponents.setAdapter(adapter);
+                                        Observable.just(dbHelper.getFindComponent(txt,
+                                                sw_search_name, sw_search_function))
+                                                .subscribeOn(Schedulers.io())
+                                                .observeOn(AndroidSchedulers.mainThread())
+                                                .subscribe(new Subscriber<List<Component>>() {
+                                                    @Override
+                                                    public void onNext(List<Component> components) {
+                                                        adapter = new ListComponentAdapter(context, components);
+                                                        lvComponents.setAdapter(adapter);
+                                                    }
+                                                    @Override
+                                                    public void onCompleted() {
+
+                                                    }
+                                                    @Override
+                                                    public void onError(Throwable e) {
+
+                                                    }
+                                                });
                                     }
                                 })
                         .setNegativeButton("Отмена",
@@ -248,10 +269,11 @@ public class MainActivity extends AppCompatActivity
                 break;
             case R.id.nav_add:
                 intent = new Intent(MainActivity.this, AddSMDActivity.class);
+                intent.putExtra("id",       0);
                 startActivityForResult(intent,NEW_SMD_REQUEST);
                 break;
             case R.id.nav_edit:
-                intent = new Intent(MainActivity.this, NewSMDActivity.class);
+                intent = new Intent(MainActivity.this, EditSMDActivity.class);
                 startActivityForResult(intent,NEW_SMD_REQUEST);
                 break;
             case R.id.nav_settings:
@@ -274,19 +296,17 @@ public class MainActivity extends AppCompatActivity
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == NEW_SMD_REQUEST) {
             if (resultCode == RESULT_OK) {
-                String[] str = new String[]{""};
-                ContentValues[] newValues = new ContentValues[1];
-                newValues[0]= new ContentValues();
-                newValues[0].put("name", data.getStringExtra("name"));
-                newValues[0].put("label", data.getStringExtra("label"));
-                newValues[0].put("body", data.getStringExtra("body"));
-                newValues[0].put("func", data.getStringExtra("func"));
-                newValues[0].put("datasheet", data.getStringExtra("pdf"));
-                newValues[0].put("favorite", 1);
-                newValues[0].put("islocal", 1);
-                newValues[0].put("prod", "");
+                ContentValues newValues = new ContentValues();
+                newValues.put("name",       data.getStringExtra("name"));
+                newValues.put("label",      data.getStringExtra("label"));
+                newValues.put("body",       data.getStringExtra("body"));
+                newValues.put("func",       data.getStringExtra("func"));
+                newValues.put("datasheet",  data.getStringExtra("pdf"));
+                newValues.put("prod",       data.getStringExtra("prod"));
+                newValues.put("favorite",   1);
+                newValues.put("islocal",    1);
 
-                Observable.from(newValues)
+                Observable.from(new ContentValues[]{newValues})
                         .subscribe(new Observer<ContentValues>() {
                             @Override
                             public void onNext(ContentValues s) {
@@ -304,6 +324,7 @@ public class MainActivity extends AppCompatActivity
                         });
             }
         }
+
     }
 
 }

@@ -29,7 +29,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginRight="8dp"
-        android:text="Поиск SMD компонентов проводится по маркировке, наименованию, а так же по функциональному назначению. Изменить поля поиска можно в настройках."
+        android:text="@string/dialog_find"
         android:textSize="12sp"
         ads:layout_constraintEnd_toEndOf="parent"
         ads:layout_constraintStart_toStartOf="parent"

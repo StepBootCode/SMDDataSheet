@@ -17,11 +17,21 @@ import java.util.List;
 
 public class ListComponentAdapter extends BaseAdapter {
     private Context mContext;
+
+    private int selections;
     private List<Component> mComponentList;
 
     public ListComponentAdapter(Context mContext, List<Component> mComponentList) {
         this.mContext = mContext;
         this.mComponentList = mComponentList;
+
+        this.selections = -1;
+    }
+
+    public void switchSelection(int position){
+        this.selections = position;
+        //оповещаем адаптер об изменениях, чтобы он обновил все элементы списка.
+        notifyDataSetChanged();
     }
 
     @Override
@@ -51,6 +61,11 @@ public class ListComponentAdapter extends BaseAdapter {
             layout.setBackgroundColor(0xFFEEEEEE);
         }
 
+        //Ключевой момент - просто ставим цвет фона в зависимости от значения переменной selection
+        if (this.selections == position){
+            layout.setBackgroundColor(0xFFFF8800);
+        }
+
         // Вывод в список информации по компонентам ------------------------------------------------
         TextView tvCode     = (TextView)v.findViewById(R.id.tvCode);
         TextView tvMarker   = (TextView)v.findViewById(R.id.tvMarker);
@@ -68,6 +83,7 @@ public class ListComponentAdapter extends BaseAdapter {
         ImageView  mImageView = (ImageView) v.findViewById(R.id.ivCode);
         int id = mContext.getResources().getIdentifier("ru.bootcode.smddatasheet:drawable/" + sCode, null, null);
         mImageView.setImageResource(id);
+
 
         return v;
     }

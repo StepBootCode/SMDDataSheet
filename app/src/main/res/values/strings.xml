@@ -11,21 +11,19 @@
     <string name="menu_home">Home</string>
     <string name="menu_favorite">Favorites</string>
     <string name="menu_database">Database editor</string>
-    <string name="menu_add">Add SMD</string>
-    <string name="menu_tools">Open settings</string>
+    <string name="menu_add">Add new SMD</string>
+    <string name="menu_tools">Settings</string>
     <string name="menu_update">Update</string>
     <string name="menu_edit">Edit</string>
-
-
     <string name="menu_bootcode">bootcode.ru</string>
+    <string name="menu_settings">Settings</string>
+
     <string name="button_search">Search</string>
+
     <string name="tv_marker">Label:</string>
     <string name="tv_name">Name:</string>
     <string name="tv_note">Function:</string>
     <string name="tv_code">Body:</string>
-    <string name="button_open">Open</string>
-    <string name="menu_settings">Settings</string>
-
 
     <!-- Strings related to Settings -->
     <string name="pref_title_system_sync_settings">System sync settings</string>
@@ -51,6 +49,9 @@
     <string name="toast_not_pdf_file">PDF file not found</string>
     <string name="toast_success_add_favorites">Successful add to favorites</string>
     <string name="toast_success_remove_favorites">Successful remove to favorites</string>
-
+    <string name="button_open">Open</string>
+    <string name="tv_prod">Producer:</string>
+    <string name="dialog_find">SMD components are searched by labeling. You can enable additional search fields in the settings</string>
+    <string name="text_default">---</string>
 
 </resources>
