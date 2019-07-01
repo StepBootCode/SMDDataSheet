@@ -31,24 +31,22 @@ import rx.schedulers.Schedulers;
 
 public class AddSMDActivity extends AppCompatActivity {
     final Context context = this;
-    private static final int EX_FILE_PICKER_RESULT = 1;
+    private static final int EX_FILE_PICKER_RESULT = 1;        // Обраточка для диалога выбора PDF
+
+    int iIDComp;                                            // идентиф. текущего компонента
+    private File pdfFile = null;                            // ссылка на PDF файл
+
     private EditText etName;
     private EditText etLabel;
     private EditText etBody;
     private EditText etFunc;
     private EditText etProd;
     private TextView tvPDF;
-    private File pdfFile = null;
-    int iIDComp;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_smd);
-
-        // Получаем SharedPreferences (Сохраненнве настройки приложения) ---------------------------
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-        final String keySavePath  = sp.getString("keySavePath", Utils.getDefaultCacheDir());
-
         etName = findViewById(R.id.etName);
         etLabel = findViewById(R.id.etLabel);
         etBody = findViewById(R.id.etBody);
@@ -56,23 +54,22 @@ public class AddSMDActivity extends AppCompatActivity {
         etProd = findViewById(R.id.etProd);
         tvPDF = findViewById(R.id.tvPDF);
 
+        // Получаем SharedPreferences (Сохраненнве настройки приложения) ---------------------------
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        final String keySavePath  = sp.getString("keySavePath", Utils.getDefaultCacheDir());
+
+        // Запроим интент, и если нам пришел ид компонента, то значит мы не добавляем, а -----------
+        // редактируем компонент, и значит нужно заполнить наши поля экране
         Intent intent = getIntent();
         iIDComp     = intent.getIntExtra("id",0);
         if (iIDComp > 0) {
             final DatabaseHelper dbHelper = new DatabaseHelper(AddSMDActivity.this);
             dbHelper.getReadableDatabase();
 
-            Observable.just( dbHelper.getComponent(String.valueOf(iIDComp)))//.fromCallable(callable)
+            Observable.just( dbHelper.getComponent(String.valueOf(iIDComp)))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(new Observer<Component>() {
-                        @Override
-                        public void onCompleted() {
-
-                        }
-                        @Override
-                        public void onError(Throwable error) { }
-
                         @Override
                         public void onNext(Component value) {
                             etName.setText(value.getName());
@@ -83,14 +80,24 @@ public class AddSMDActivity extends AppCompatActivity {
                             String sPDF = keySavePath +"/"+value.getDatasheet();
                             tvPDF.setText(sPDF);
                             pdfFile = new File(sPDF);
+                        }
+                        @Override
+                        public void onCompleted() {
                             if (!pdfFile.isFile()) {
                                 pdfFile = null;
                                 tvPDF.setText(R.string.toast_not_pdf_file);
                             }
                         }
+                        @Override
+                        public void onError(Throwable error) {
+                            pdfFile = null;
+                            tvPDF.setText(R.string.toast_not_pdf_file);
+                        }
+
                     });
         }
 
+        // Диалог выбора файла ---------------------------------------------------------------------
         Button btSelectPDF = findViewById(R.id.btSelectPDF);
         btSelectPDF.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -101,6 +108,7 @@ public class AddSMDActivity extends AppCompatActivity {
             }
         });
 
+        // Сохраняем данные в интент и возвращаем их -----------------------------------------------
         Button btSave = findViewById(R.id.btSave);
         btSave.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -165,8 +173,9 @@ public class AddSMDActivity extends AppCompatActivity {
                     pdfFile = new File(str);
                     if (!pdfFile.isFile()) {
                         pdfFile = null;
+                        tvPDF.setText(R.string.toast_not_pdf_file);
                     } else {
-                        tvPDF.setText(str);// = (TextView) findViewById(R.id.tvPDF);
+                        tvPDF.setText(str);
                     }
                 } else {
                     Utils.showToast(AddSMDActivity.this,R.string.toast_not_pdf_file);

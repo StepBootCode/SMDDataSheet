@@ -56,4 +56,5 @@
     <string name="dialog_find">Поиск SMD производится по маркировке. Вы можете включить дополнительные поля поиска в настройках</string>
     <string name="text_default">---</string>
     <string name="text_none">None</string>
+    <string name="toast_update_not_found">Обновления не найдены</string>
 </resources>

@@ -54,5 +54,6 @@
     <string name="dialog_find">SMD components are searched by labeling. You can enable additional search fields in the settings</string>
     <string name="text_default">---</string>
     <string name="text_none">None</string>
+    <string name="toast_update_not_found">Updates not found</string>
 
 </resources>

@@ -1,67 +1,57 @@
 package ru.bootcode.smddatasheet;
 
-import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Intent;
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.database.sqlite.SQLiteDatabase;
-import android.preference.PreferenceManager;
 import android.view.View;
 import android.view.MenuItem;
 import android.view.LayoutInflater;
-
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.EditText;
+import android.widget.ListView;
+import android.os.Bundle;
+import android.app.AlertDialog;
+import android.database.sqlite.SQLiteDatabase;
+import android.preference.PreferenceManager;
 import androidx.annotation.NonNull;
+
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.widget.Toolbar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.ActionBarDrawerToggle;
+
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.EditText;
-import android.widget.ListView;
-
-
 import com.google.android.gms.ads.MobileAds;
 
-import android.os.Bundle;
-
 import java.io.File;
-import java.sql.Array;
 import java.util.List;
-import java.util.concurrent.Callable;
 
 import rx.Observable;
 import rx.Observer;
-import rx.Single;
-import rx.SingleSubscriber;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+                            implements NavigationView.OnNavigationItemSelectedListener {
+
     final Context context = this;
-    static final int NEW_SMD_REQUEST = 2;
+    static final int NEW_SMD_REQUEST = 2;               // Код обратки при добавлении нового SMD
 
     // SharedPreferences переменные (хранение настроек)
     SharedPreferences sp;
-    Boolean do_cash;            // true - включено кеширование на внутренний носитель
-    Boolean sw_search_name, sw_search_function; // Указывают на поля для поиска
-    String save_path;
+    Boolean sw_search_name, sw_search_function;         // Указывают на поля для поиска
+    String keySavePath;                                 // Кэш где хранятся pdf
 
-    // Переменные для работы с базой данных
+    // Переменные для работы с базой данных и вывода данных
+    private DatabaseHelper dbHelper;
     private ListView lvComponents;
     private ListComponentAdapter adapter;
-    private List<Component> componentList;
-    private Component selectedComponent;
-    private DatabaseHelper dbHelper;
 
     // Переменные для работы с рекламмой
     static final private String ADMOB_APP_ID="ca-app-pub-4325894448754236~8052800321";
@@ -71,17 +61,12 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         lvComponents = findViewById(R.id.lvMain);
-        // запросим кеш по умолчанию
-        String sSavePathDef = Utils.getDefaultCacheDir();
 
         // Получаем SharedPreferences (Сохраненнве настройки приложения) ---------------------------
         sp = PreferenceManager.getDefaultSharedPreferences(this);
         sw_search_name      = sp.getBoolean("keySwitchSearchName", false);
         sw_search_function  = sp.getBoolean("keySwitchSearchFunction", false);
-        //do_cash           = sp.getBoolean("keyCache", false);
-        save_path           = sp.getString("keySavePath", sSavePathDef);
-
-        // Тут бы проверить savePath на доступность и др. хрень. (в утилитах конечно)
+        keySavePath         = sp.getString("keySavePath", Utils.getDefaultCacheDir());
 
         // Стандартная колбаса создающая тулбар ----------------------------------------------------
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -136,12 +121,12 @@ public class MainActivity extends AppCompatActivity
                 .subscribe(new Subscriber<List<Component>>() {
                     @Override
                     public void onNext(List<Component> components) {
+                        // тут можно добавить проверку на пустоту components
                         adapter = new ListComponentAdapter(context, components);
-                        lvComponents.setAdapter(adapter);
                     }
                     @Override
                     public void onCompleted() {
-
+                        lvComponents.setAdapter(adapter);
                     }
                     @Override
                     public void onError(Throwable e) {
@@ -154,18 +139,14 @@ public class MainActivity extends AppCompatActivity
         //lvComponents.setAdapter(adapter);                             - отдал под RXJava
         lvComponents.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                //Intent intent = new Intent(MainActivity.this, ComponentActivity.class);
                 adapter.switchSelection(position);
-                //selectedComponent = dbHelper.getComponent(String.valueOf(id));
                 String[] str = {String.valueOf(id)};
-                Observable.from(str)
-                        .subscribe(new Observer<String>() {
+                Observable.just(dbHelper.getComponent(String.valueOf(id)))
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(new Observer<Component>() {
                             @Override
-                            public void onNext(String s) {
-                                   selectedComponent = dbHelper.getComponent(s);
-                            }
-                            @Override
-                            public void onCompleted() {
+                            public void onNext(Component selectedComponent) {
                                 Intent intent = new Intent(MainActivity.this, ComponentActivity.class);
                                 intent.putExtra("id",       selectedComponent.getID());
                                 intent.putExtra("name",     selectedComponent.getName());
@@ -178,6 +159,8 @@ public class MainActivity extends AppCompatActivity
                                 intent.putExtra("islocal",  selectedComponent.get_islcal());
                                 startActivity(intent);
                             }
+                            @Override
+                            public void onCompleted() { }
                             @Override
                             public void onError(Throwable e) { }
                         });
@@ -260,7 +243,7 @@ public class MainActivity extends AppCompatActivity
         Intent intent;
         switch(item.getItemId()) {
             case R.id.nav_home:
-                componentList = dbHelper.getListComponent();
+                List<Component> componentList = dbHelper.getListComponent();
                 adapter = new ListComponentAdapter(MainActivity.this, componentList);
                 lvComponents.setAdapter(adapter);
                 break;
@@ -276,14 +259,15 @@ public class MainActivity extends AppCompatActivity
                 break;
             case R.id.nav_edit:
                 intent = new Intent(MainActivity.this, EditSMDActivity.class);
-                startActivityForResult(intent,NEW_SMD_REQUEST);
+                startActivity(intent);
                 break;
             case R.id.nav_settings:
                 intent = new Intent(MainActivity.this, SettingsActivity.class);
                 startActivity(intent);
                 break;
             case R.id.nav_update:
-
+                // Зарезервируем под будущие плюшки
+                Utils.showToast(context, R.string.toast_update_not_found);
                 break;
             default:
                 break;
@@ -308,22 +292,22 @@ public class MainActivity extends AppCompatActivity
                 newValues.put("favorite",   1);
                 newValues.put("islocal",    1);
 
-                String dst = save_path+"/"+data.getStringExtra("pdfname");
+                // Тут можно было бы написать красивее и по умнее код, на будущее :)
+
+                String dst = keySavePath+"/"+data.getStringExtra("pdfname");
                 if (!data.getStringExtra("pdf").equals(dst)) {
                     Observable.just(Utils.copyFile(data.getStringExtra("pdf"), dst))
                             .subscribe(new Observer<Boolean>() {
                                 @Override
+                                public void onNext(Boolean aBoolean) {
+
+                                }
+                                @Override
                                 public void onCompleted() {
                                     Utils.showToast(context, "File is cached");
                                 }
-
                                 @Override
                                 public void onError(Throwable e) {
-
-                                }
-
-                                @Override
-                                public void onNext(Boolean aBoolean) {
 
                                 }
                             });
