@@ -34,7 +34,7 @@
     <string name="pref_description_local">Необходим перезапуск прложения</string>
     <string name="pref_title_cache">Кешировать datasheets</string>
     <string name="pref_description_cache">Кешировать DataSheet в каталог</string>
-    <string name="pref_title_datasheet_save_path">Каталог сохранения DataSteet`ов</string>
+    <string name="pref_title_datasheet_save_path">Каталог хранения DataSteet`ов</string>
     <string name="pref_search">Поиск (по умолчанию: по маркировке)</string>
     <string name="pref_search_by_name">Искать по наименованию</string>
     <string name="pref_search_by_function">Искать по функционалу</string>
@@ -57,4 +57,5 @@
     <string name="text_default">---</string>
     <string name="text_none">None</string>
     <string name="toast_update_not_found">Обновления не найдены</string>
+    <string name="pref_title_cache_settings">Настройки кеширования</string>
 </resources>

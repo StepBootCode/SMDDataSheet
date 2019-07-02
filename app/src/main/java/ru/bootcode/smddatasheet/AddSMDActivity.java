@@ -1,37 +1,29 @@
 package ru.bootcode.smddatasheet;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.FragmentActivity;
-import androidx.preference.Preference;
 
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.text.Editable;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
 import java.io.File;
-import java.util.List;
-import java.util.concurrent.Callable;
 
 import ru.bartwell.exfilepicker.ExFilePicker;
 import ru.bartwell.exfilepicker.data.ExFilePickerResult;
 import rx.Observable;
 import rx.Observer;
-import rx.Single;
-import rx.SingleSubscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
 public class AddSMDActivity extends AppCompatActivity {
     final Context context = this;
-    private static final int EX_FILE_PICKER_RESULT = 1;        // Обраточка для диалога выбора PDF
+    private static final int EX_FILE_PICKER_RESULT = 1;     // Обраточка для диалога выбора PDF
 
     int iIDComp;                                            // идентиф. текущего компонента
     private File pdfFile = null;                            // ссылка на PDF файл
@@ -47,12 +39,12 @@ public class AddSMDActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_smd);
-        etName = findViewById(R.id.etName);
+        etName  = findViewById(R.id.etName);
         etLabel = findViewById(R.id.etLabel);
-        etBody = findViewById(R.id.etBody);
-        etFunc = findViewById(R.id.etFunc);
-        etProd = findViewById(R.id.etProd);
-        tvPDF = findViewById(R.id.tvPDF);
+        etBody  = findViewById(R.id.etBody);
+        etFunc  = findViewById(R.id.etFunc);
+        etProd  = findViewById(R.id.etProd);
+        tvPDF   = findViewById(R.id.tvPDF);
 
         // Получаем SharedPreferences (Сохраненнве настройки приложения) ---------------------------
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
@@ -116,10 +108,9 @@ public class AddSMDActivity extends AppCompatActivity {
                 if (testText())
                 {
                     String sName = pdfFile.getName();
-                    sName = sName.replace("~","0")
-                            .replace("@","1")
-                            .replace("#","2");
+                    sName = sName.replace("~","0").replace("@","1").replace("#","2");
 
+                    // !!! Bundle extras нужен, не сокращать до intent.putExtras(id)...
                     Intent result = new Intent("ru.bootcode.smddatasheet");//
                     Bundle extras = new Bundle();
                     extras.putInt("id", iIDComp);
@@ -138,6 +129,7 @@ public class AddSMDActivity extends AppCompatActivity {
         });
     }
 
+    // Приметивный тест на заполнение полей
     boolean testText(){
         if (etName.getText().length() < 1) {
             Utils.showToast(context,R.string.toast_not_filled_name);
@@ -165,6 +157,8 @@ public class AddSMDActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
+        // Обрабатываем диалог выбора PDF файла
         if (requestCode == EX_FILE_PICKER_RESULT) {
             ExFilePickerResult result = ExFilePickerResult.getFromIntent(data);
             if (result != null && result.getCount() > 0) {

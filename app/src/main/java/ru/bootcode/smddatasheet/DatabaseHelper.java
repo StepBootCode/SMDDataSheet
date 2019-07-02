@@ -12,6 +12,7 @@ import java.util.concurrent.Callable;
 import rx.Observable;
 import rx.Single;
 
+// ВНИМАНИЕ! Нужно перенести запросы в стринговые ресурсы
 public class DatabaseHelper extends SQLiteOpenHelper {
     // Верися базы данных, при изменении следует увеличить (произойдет замешение уже имеющийся базы)
     // В базе данных есть таблица с полем "version" указывающая на версию базы данных, при увилечении
@@ -21,13 +22,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // Константы указывающие на базу данных в локальном каталоге приложения
     private static final String DBNAME = "smd.db";
     //private static final String DBLOCATION = /data/data/ru.bootcode.smddatasheet/databases/smd.db
+
     private Context mContext;
     private SQLiteDatabase mDatabase;
 
+    // Возвращает имя базы данных
     static String getDBNAME() {
         return DBNAME;
     }
 
+    // Возвращает стандартный каталог с базой данных
     static String getDBLOCATION(Context context) {
         return context.getDatabasePath(DBNAME).getPath();
     }
@@ -49,20 +53,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private void openDatabase() {
         String dbPath = mContext.getDatabasePath(DBNAME).getPath();
-        if(mDatabase != null && mDatabase.isOpen()) {
-            return;
-        }
+        if(mDatabase != null && mDatabase.isOpen()) return;
+
         try {
         mDatabase = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READWRITE);
-        }catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
+        }catch (Exception ignored) { }
     }
 
     private void closeDatabase() {
-        if(mDatabase!=null) {
-            mDatabase.close();
-        }
+        if(mDatabase!=null) mDatabase.close();
     }
 
     // Функция проверяет изменилась ли версия базы данных
@@ -94,10 +93,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Cursor cursor = null;
 
         try {
-            cursor = mDatabase.rawQuery(
-                    "SELECT _id, body, label, func, prod, name " +
-                         "FROM COMPONENTS",
-                    null);
+            cursor = mDatabase.rawQuery("SELECT _id, body, label, func, prod, name " +
+                                                "FROM COMPONENTS", null);
         }catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -242,15 +239,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return component;
     }
 
-    // Возвращает являеться ли SMD избранным (-1 - если воникла ошибка)
-    int getIsFavoriteCmp(String ID) {
+    // Возвращает являеться ли SMD избранным (1 - избр., 0... - неизбр. -1 - если воникла ошибка)
+    int getIsFavoriteCmp(long ID) {
         Component component = null;
         openDatabase();
         Cursor cursor = null;
         int res = -1;
         try {
-            cursor = mDatabase.rawQuery("SELECT favorite FROM COMPONENTS WHERE _ID = "+ID,
-                    null);
+            cursor = mDatabase.rawQuery(
+                    String.format("SELECT favorite FROM COMPONENTS WHERE _ID = %d", ID), null);
         }catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -264,5 +261,4 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         closeDatabase();
         return res;
     }
-
 }

@@ -15,6 +15,9 @@ import android.view.ViewGroup;
 /**
  * A {@link PreferenceActivity} which implements and proxies the necessary calls
  * to be used with AppCompat.
+ *
+ *
+ * Стандартный класс, нечего здесь пока ковырять
  */
 public abstract class AppCompatPreferenceActivity extends PreferenceActivity {
 

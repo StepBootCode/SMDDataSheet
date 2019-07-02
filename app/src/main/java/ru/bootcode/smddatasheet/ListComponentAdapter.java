@@ -1,6 +1,5 @@
 package ru.bootcode.smddatasheet;
 
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.View;
@@ -12,26 +11,20 @@ import android.widget.TextView;
 
 import java.util.List;
 
-/**
- * Created by Администратор on 26.07.2018.
- */
-
 public class ListComponentAdapter extends BaseAdapter {
     private Context mContext;
-
     private int selections;
     private List<Component> mComponentList;
 
     ListComponentAdapter(Context mContext, List<Component> mComponentList) {
         this.mContext = mContext;
         this.mComponentList = mComponentList;
-
-        this.selections = -1;
+        this.selections = -1;                           // -1 Не выбран не один элемент
     }
 
     void switchSelection(int position){
+        // Сохраняем текущую позицию и оповещаем адаптер об изменениях для обновиления списка.
         this.selections = position;
-        //оповещаем адаптер об изменениях, чтобы он обновил все элементы списка.
         notifyDataSetChanged();
     }
 
@@ -76,17 +69,17 @@ public class ListComponentAdapter extends BaseAdapter {
 
         tvCode.setText(mComponentList.get(position).getBody());
         tvMarker.setText(String.format(" [%s] ", mComponentList.get(position).getLabel()));
-        tvNote.setText(String.format("%s (%s)", mComponentList.get(position).getFunc(), mComponentList.get(position).getProd()));
+        tvNote.setText(String.format("%s (%s)", mComponentList.get(position).getFunc(),
+                                                mComponentList.get(position).getProd()));
         tvName.setText(mComponentList.get(position).getName());
 
         // Код выводит картинку из ресурсов приложения, --------------------------------------------
-        // заменяем - на _ так как - нельзя испеользовать в файлах
+        // заменяем "-" на "_" так как его нельзя испеользовать в файлах ресурсов, а в БД есть "-"
         String sCode = mComponentList.get(position).getBody().replace("-","_").toLowerCase();
         ImageView  mImageView = v.findViewById(R.id.ivCode);
-        int id = mContext.getResources().getIdentifier("ru.bootcode.smddatasheet:drawable/" + sCode, null, null);
+        int id = mContext.getResources().getIdentifier("ru.bootcode.smddatasheet:drawable/" + sCode,
+                                                                                        null, null);
         mImageView.setImageResource(id);
-
-
         return v;
     }
 }

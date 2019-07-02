@@ -1,15 +1,17 @@
 package ru.bootcode.smddatasheet;
 
-/**
- * Created by Администратор on 25.07.2018.
+/*
+ * Created by Stepchenkov Sergey on 25.07.2018.
  * Класс описывает структу Компонента
+ *
+ * Немного избыточен, надо бы почистить после ближайщих тестов
  */
 
 public class Component {
     private int _id;                    // идентификатор записи в базе данных
     private String _name;               // Наименование Компонента
     private String _body;               // Кодировка корпуса
-    private String _label;             // Маркировка наносимая на SMD
+    private String _label;               // Маркировка наносимая на SMD
     private String _prod;               // Производитель
     private String _func;               // Описание (Назначение - Транзистор, Диод...)
     private String _datasheet;          // Ссылка(имя файла PDF) на даташит расположенного на сервере
@@ -17,10 +19,6 @@ public class Component {
     private int _forvarite;
     private int _islcal;
     private int _image;                 // Картинка - Зарезервировано
-
-    public Component(){
-        int _image=0;
-    }
 
     public Component(int id, String name, String body, String label, String prod, String func, String datasheet){
         this._id = id;

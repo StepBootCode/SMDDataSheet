@@ -28,10 +28,10 @@ class Utils {
             writer.append(str);
             writer.flush();
             writer.close();
-
         } catch (IOException ignored) {
             return false;
         }
+        // Если он удаляеться значит все ОК
         return testfile.delete();
     }
 
@@ -43,8 +43,8 @@ class Utils {
         }  else {
             fl  = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath();
         }
+        // Добавим к этому всему нашу директорию и рекурсивно создадим директории
         fl = fl + "/DataSheets";
-
         File f = new File(fl);
         if(!f.isDirectory()) {
             f.mkdirs();
@@ -78,9 +78,8 @@ class Utils {
     // Копирование файлов
     static boolean copyFile(String src, String dst) {
         try {
-            // Открываем поток - Откуда копируем (из каталога assets)
+            // Открываем потоки - Откуда и куда копируем
             InputStream inputStream = new FileInputStream(src);
-            // Открываем поток - Куда копируем (каталог программы)
             OutputStream outputStream = new FileOutputStream(dst);
             // Стандартное копирование потоков
             byte[]buff = new byte[1024];
@@ -96,7 +95,6 @@ class Utils {
             return false;
         }
     }
-
 
     // Тост, на пряую из строки
     static void showToast(Context context, String msg) {

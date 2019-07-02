@@ -18,33 +18,29 @@ import android.widget.Button;
 import android.widget.ListView;
 
 import java.util.List;
-import java.util.concurrent.Callable;
 
 import rx.Observable;
 import rx.Observer;
-import rx.Single;
-import rx.SingleSubscriber;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
 public class EditSMDActivity extends AppCompatActivity  {
-    private static final int EX_FILE_PICKER_RESULT = 1;
-    static final int UPDATE_SMD_REQUEST = 3;
     final Context context = this;
-    ListView lvDB;
-    long selectedID=0;
-    String keySavePath;
-    private DatabaseHelper mDBHelper;
-    private ListComponentAdapter adapter;
-    private List<Component> mComponentList;
-    private Component SelectedComponent;
+    static final int UPDATE_SMD_REQUEST = 3;            // Обраточка при редактировании компонента
 
-    Button btnAdd;
+    long    selectedID  = 0;                             // ИД выбранного компонента
+    int     isFavorite  = 0;                             // Избранный ли текущий элемент
+    String  keySavePath;                                // Путь к кешу
+
+    private DatabaseHelper          mDBHelper;
+    private ListComponentAdapter    adapter;
+
+    ListView lvDB;
     Button btnEdit;
     Button btnDel;
     Button btnFavorite;
-    Button btnClose;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,7 +51,11 @@ public class EditSMDActivity extends AppCompatActivity  {
         keySavePath  = sp.getString("keySavePath", Utils.getDefaultCacheDir());
 
         mDBHelper = new DatabaseHelper(this);
+        mDBHelper.getReadableDatabase();
 
+        // При нажатии кнопки редактирования вызовем форму добавления, но передадим туда ID --------
+        // Только если он выбран
+        // p.s. Bundle extras - обязателен, не надо сокращать и делать - intent.putExtras(id) !!!
         btnEdit = findViewById(R.id.btnEdit);
         btnEdit.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -70,40 +70,34 @@ public class EditSMDActivity extends AppCompatActivity  {
             }
         });
 
-
+        // Обработка нажатия кнопки избранное, тут в фоне обновляем в базе значение и меняем,
+        // если все нормально, картинку у кнопки
         btnFavorite = findViewById(R.id.btnFav);
         btnFavorite.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (selectedID>0) {
-                    final int[] iFavorite = new int[1];
-                    String[] str = {String.valueOf(selectedID)};
-                    Observable.from(str)
-                            .subscribe(new Observer<String>() {
+                    Observable.just(mDBHelper.getIsFavoriteCmp(selectedID))
+                            .subscribe(new Observer<Integer>() {
                                 @Override
-                                public void onNext(String s) {
-                                    DatabaseHelper dbHelper = new DatabaseHelper(EditSMDActivity.this);
-                                    SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-                                    int fvr = dbHelper.getIsFavoriteCmp(s);
+                                public void onNext(Integer fvr) {
+                                    if (fvr == 0) isFavorite = 1;
+                                             else isFavorite = 0;
 
                                     ContentValues updatedValues = new ContentValues();
-                                    if (fvr == 0) {
-                                        updatedValues.put("favorite", 1);
-                                        iFavorite[0] = 1;
-                                    } else {
-                                        updatedValues.put("favorite", 0);
-                                        iFavorite[0] = 0;
-                                    }
-                                    String where = "_id=?";
-                                    String[] whereArgs = {s};
+                                    updatedValues.put("favorite", isFavorite);
 
+                                    String where = "_id=?";
+                                    String[] whereArgs = {String.valueOf(selectedID)};
+
+                                    DatabaseHelper dbHelper = new DatabaseHelper(EditSMDActivity.this);
+                                    SQLiteDatabase db = dbHelper.getWritableDatabase();
                                     db.update("COMPONENTS", updatedValues, where, whereArgs);
                                 }
 
                                 @Override
                                 public void onCompleted() {
-                                    if (iFavorite[0] > 0) {
+                                    if (isFavorite > 0) {
                                         btnFavorite.setBackgroundResource(R.drawable.ic_favorite_on);
                                         Utils.showToast(EditSMDActivity.this, R.string.toast_success_add_favorites);
                                     } else {
@@ -121,15 +115,16 @@ public class EditSMDActivity extends AppCompatActivity  {
             }
         });
 
+        // Обработка нажатия кнопки удаление, выводим диалог (ДА/НЕТ) и потом уже выполняем удаление,
+        // если все нормально, незабываем selectID присвоить -1
         btnDel = findViewById(R.id.btnDel);
         btnDel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (selectedID>0) {
                     AlertDialog.Builder mDialogBuilder = new AlertDialog.Builder(context);
-                    //Настраиваем сообщение в диалоговом окне:
                     Component selectedComponent = mDBHelper.getComponent(String.valueOf(selectedID));
-                    //intent.putExtra("id", String.valueOf(id));
+
                     mDialogBuilder.setTitle("Удалить "+selectedComponent.getLabel());
                     mDialogBuilder.setCancelable(false);
                     mDialogBuilder.setPositiveButton("OK",
@@ -144,7 +139,6 @@ public class EditSMDActivity extends AppCompatActivity  {
                                     dialog.cancel();
                                 }
                             });
-                    //Создаем AlertDialog и отображаем его:
                     AlertDialog alertDialog = mDialogBuilder.create();
                     alertDialog.show();
                 }
@@ -180,7 +174,7 @@ public class EditSMDActivity extends AppCompatActivity  {
 
                 DatabaseHelper dbHelper = new DatabaseHelper(EditSMDActivity.this);
                 dbHelper.getWritableDatabase();
-                Observable.just(dbHelper.getIsFavoriteCmp(String.valueOf(id)))
+                Observable.just(dbHelper.getIsFavoriteCmp(id))
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(new Subscriber<Integer>() {
@@ -219,6 +213,7 @@ public class EditSMDActivity extends AppCompatActivity  {
                         List<Component> value =  mDBHelper.getListLocals();
                         adapter = new ListComponentAdapter(EditSMDActivity.this, value);
                         lvDB.setAdapter(adapter);
+                        selectedID = -1;
                     }
                     @Override
                     public void onError(Throwable e) { }
@@ -241,6 +236,7 @@ public class EditSMDActivity extends AppCompatActivity  {
                 newValues.put("favorite",   1);
                 newValues.put("islocal",    1);
 
+                // Копируем файл в кеш -------------------------------------------------------------
                 String dst = keySavePath+"/"+data.getStringExtra("pdfname");
                 if (!data.getStringExtra("pdf").equals(dst)) {
                     Observable.just(Utils.copyFile(data.getStringExtra("pdf"), dst))
@@ -261,6 +257,8 @@ public class EditSMDActivity extends AppCompatActivity  {
                                 }
                             });
                 }
+
+                // Обновляем SMD компонент в базе и на экране --------------------------------------
                 Observable.from(new ContentValues[]{newValues})
                         .subscribe(new Observer<ContentValues>() {
                             @Override

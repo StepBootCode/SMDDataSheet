@@ -6,33 +6,24 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
+
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.List;
 import java.util.Locale;
 
 import okhttp3.OkHttpClient;
@@ -47,23 +38,17 @@ import static ru.bootcode.smddatasheet.Utils.showToast;
 public class ComponentActivity extends Activity {
     final Context context = this;
 
-    Boolean keyCache;                    // Тру - нужно кешировать PDF файлы на устройстве
-    String keySavePath;                    // Путь к кешу
+    Boolean keyCache;                       // Тру - нужно кешировать PDF файлы на устройстве
+    String keySavePath;                     // Путь к кешу
+
     int iFavorite;
+    int isFavorite;
     int iIDComp;
 
-    private TextView tvCode;
-    private TextView tvName;
-    private TextView tvNote;
-    private TextView tvMarker;
-    private String sDatasheet;
     private String sLinkDatasheet;
     private String sCacheDatasheet;
 
-    private Button btnDataSheet;
     private Button btnFavorite;
-    private Button btnSave;
-    private AdView mAdView;
 
     private final static String LINK = "http://bootcode.ru/datasheet/";
 
@@ -73,48 +58,47 @@ public class ComponentActivity extends Activity {
         setContentView(R.layout.activity_component);
 
         // Получим настройки и в частности нужно ли кешировать PDF файлы ---------------------------
-        SharedPreferences sp;
-        sp = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
         keyCache    = sp.getBoolean("keyCache", false);
         keySavePath = sp.getString("keySavePath", Utils.getDefaultCacheDir());
 
-        // Получаем переданные из MainActivity параметры о SMD компоненте --------------------------
+        // Получаем переданные из MainActivity (Информация о SMD компоненте) -----------------------
         Intent intent = getIntent();
-        iIDComp = intent.getIntExtra("id",0);
-        String sName    = intent.getStringExtra("name");
-        String sBody    = intent.getStringExtra("body");
-        String sLabel  = intent.getStringExtra("label");
-        String sFunc    = intent.getStringExtra("func");
-        String sDatasheet = intent.getStringExtra("datasheet");
-        iFavorite   = intent.getIntExtra("favorite",0);
-        //String sProd = intent.getStringExtra("prod");
-        final int iisLocal    = intent.getIntExtra("islocal",0);
+        iIDComp     = intent.getIntExtra("id",0);
+        isFavorite  = intent.getIntExtra("favorite",0);
+        final int iisLocal  = intent.getIntExtra("islocal",0);
+        String sName        = intent.getStringExtra("name");
+        String sBody        = intent.getStringExtra("body");
+        String sLabel       = intent.getStringExtra("label");
+        String sFunc        = intent.getStringExtra("func");
+        String sDatasheet   = intent.getStringExtra("datasheet");
+        //String sProd        = intent.getStringExtra("prod");
 
-        // Определяем ссылки на PDF файлы на сервере и локально
-        sLinkDatasheet = LINK+sDatasheet.replace("~","0")
-                .replace("@","1")
-                .replace("#","2")+".pdf";
-        sCacheDatasheet = keySavePath +"/"+ sDatasheet.replace("~","0")
-                .replace("@","1")
-                .replace("#","2")+".pdf";
+
+        // Определяем ссылки на PDF файлы на сервере и локально (в кеше) ---------------------------
+        String fileName = sDatasheet.replace("~","0").replace("@","1").replace("#","2")+".pdf";
+        sLinkDatasheet = LINK+fileName;
+        sCacheDatasheet = keySavePath +"/"+ fileName;
+
         // Выводим информацию о компоненте ---------------------------------------------------------
         ((TextView) findViewById(R.id.tvNote)).setText(sFunc);
         ((TextView) findViewById(R.id.tvCode)).setText(sBody);
         ((TextView) findViewById(R.id.tvName)).setText(sName);
         ((TextView) findViewById(R.id.tvMarker)).setText(sLabel);
 
-        // Вытаскиваем и показываем картинку из ресурсов
+        // Вытаскиваем и показываем картинку из ресурсов -------------------------------------------
         sBody =sBody.replace("-","_").toLowerCase();
-        int id = getResources().getIdentifier(
-                "ru.bootcode.smddatasheet:drawable/big_" + sBody,
-                null, null);
-        if (id == 0) id = getResources().getIdentifier(
-                "ru.bootcode.smddatasheet:drawable/big_def",
-                null, null);
+        int id = getResources().getIdentifier( "ru.bootcode.smddatasheet:drawable/big_" + sBody,
+                                                                                        null, null);
+        if (id == 0) id = getResources().getIdentifier("ru.bootcode.smddatasheet:drawable/big_def",
+                                                                                        null, null);
         ((ImageView) findViewById(R.id.ivCode)).setImageResource(id);
 
         // создаем обработчик нажатия кнопки загрузки PDF ------------------------------------------
-        btnDataSheet = findViewById(R.id.btnDataSheet);
+        // Сначала проверяем, может это файл пользователя (значит он локально)
+        // Потом проверяем кеш, если стоит в настройках тру, при всем при этом не забываем проверять
+        // установлен ли PDF Reader на устройстве
+        Button btnDataSheet = findViewById(R.id.btnDataSheet);
         btnDataSheet.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -136,7 +120,11 @@ public class ComponentActivity extends Activity {
                     }else{
                         showPDFfromURL(sLinkDatasheet);
                         // Загружаем файл в кеш
-                        downloadPDFFile(sLinkDatasheet, sCacheDatasheet);
+                        try {
+                            downloadPDFFile(sLinkDatasheet, sCacheDatasheet);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
                 } else {
                     showPDFfromURL(sLinkDatasheet);
@@ -146,35 +134,17 @@ public class ComponentActivity extends Activity {
 
         // Обработка кнопки Избранное --------------------------------------------------------------
         btnFavorite = findViewById(R.id.btnFavorite);
-        if (iFavorite > 0)  btnFavorite.setBackgroundResource(R.drawable.ic_favorite_on);
-            else            btnFavorite.setBackgroundResource(R.drawable.ic_favorite_off);
+        if (isFavorite > 0)     btnFavorite.setBackgroundResource(R.drawable.ic_favorite_on);
+            else                btnFavorite.setBackgroundResource(R.drawable.ic_favorite_off);
 
         btnFavorite.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String[] str = {String.valueOf(iIDComp)};
-                Observable.from(str)
-                        .subscribe(new Observer<String>() {
-                            @Override
-                            public void onNext(String s) {
-                                DatabaseHelper dbHelper = new DatabaseHelper(ComponentActivity.this);
-                                SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-                                int fvr = dbHelper.getIsFavoriteCmp(s);
-
-                                ContentValues updatedValues = new ContentValues();
-                                if (fvr == 0) {
-                                    updatedValues.put("favorite", 1);
-                                    iFavorite = 1;
-                                } else {
-                                    updatedValues.put("favorite", 0);
-                                    iFavorite = 0;
-                                }
-                                String where = "_id=?";
-                                String[] whereArgs = {s};
-
-                                db.update("COMPONENTS", updatedValues, where, whereArgs);
-                            }
+                DatabaseHelper dbHelper = new DatabaseHelper(ComponentActivity.this);
+                dbHelper.getReadableDatabase();
+                Observable.just(dbHelper.getIsFavoriteCmp(iIDComp))
+                        .subscribe(new Observer<Integer>() {
                             @Override
                             public void onCompleted() {
                                 if (iFavorite > 0) {
@@ -185,16 +155,34 @@ public class ComponentActivity extends Activity {
                                     Utils.showToast(ComponentActivity.this,R.string.toast_success_remove_favorites);
                                 }
                             }
+
                             @Override
                             public void onError(Throwable e) {
 
+                            }
+
+                            @Override
+                            public void onNext(Integer fvr) {
+                                if (fvr == 0) isFavorite = 1;
+                                else isFavorite = 0;
+
+                                ContentValues updatedValues = new ContentValues();
+                                updatedValues.put("favorite", isFavorite);
+
+                                String where = "_id=?";
+                                String[] whereArgs = {String.valueOf(iIDComp)};
+
+                                DatabaseHelper dbHelper = new DatabaseHelper(ComponentActivity.this);
+                                SQLiteDatabase db = dbHelper.getWritableDatabase();
+                                db.update("COMPONENTS", updatedValues, where, whereArgs);
                             }
                         });
             }
         });
 
-        // Рекламма, без нее ни как ) --------------------------------------------------------------
-        mAdView = findViewById(R.id.adView);
+        // Рекламма, без нее ни как :) -------------------------------------------------------------
+        // Надо подумать как добавить китайскую сеть Youmi
+        AdView mAdView = findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
         mAdView.setAdListener(new AdListener() {
@@ -203,16 +191,14 @@ public class ComponentActivity extends Activity {
             }
         });
     }
-
-    private static final int FILE_SELECT_CODE = 0;
-
+    // Простое отображение PDF в браузере, через сервис google -------------------------------------
     private void showPDFfromURL(String url) {
         String format = "https://drive.google.com/viewerng/viewer?embedded=true&url=%s";
         String fullPath = String.format(Locale.ENGLISH, format, url);
         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(fullPath));
         startActivity(browserIntent);
     }
-
+    // Простое отображение PDF в PDF Reader, если он установлен (иначе возвращает FALSE) -----------
     private boolean showPDFfromCache(String f){
         try {
             Intent intentUrl = new Intent(Intent.ACTION_VIEW);
@@ -230,24 +216,17 @@ public class ComponentActivity extends Activity {
         return true;
     }
 
-    private void downloadPDFFile(String url, final String fl) {
-        final String[] str = {url};
-        Observable.from(str)
+    // Загрузка PDF с сервера в локальное хранилище ------------------------------------------------
+    private void downloadPDFFile(String url, final String fl) throws IOException {
+        final OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder().url(url).build();
+
+        Observable.just(client.newCall(request).execute())
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.newThread())
-                .subscribe(new Observer<String>() {
+                .subscribe(new Observer<Response>() {
                     @Override
-                    public void onNext(String s) {
-                        final OkHttpClient client = new OkHttpClient();
-                        Request request = new Request.Builder()
-                                .url(s)
-                                .build();
-                        Response response = null;
-                        try {
-                            response = client.newCall(request).execute();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                    public void onNext(Response response) {
                         if (null != response && response.body() != null) {
                             if (response.isSuccessful()) {
                                 try {
@@ -277,6 +256,4 @@ public class ComponentActivity extends Activity {
                     }
                 });
     }
-
-
 }

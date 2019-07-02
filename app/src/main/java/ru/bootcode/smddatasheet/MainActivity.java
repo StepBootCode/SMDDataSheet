@@ -1,3 +1,12 @@
+/**
+ * Copyright (c) 2019-present, SMD Datasheet database client.
+ *
+ * Licensed under the GNU General Public License (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.gnu.org/
+ */
+
 package ru.bootcode.smddatasheet;
 
 import android.content.ContentValues;

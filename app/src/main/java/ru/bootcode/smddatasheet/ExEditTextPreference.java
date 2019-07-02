@@ -1,6 +1,5 @@
 package ru.bootcode.smddatasheet;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.os.Parcel;
@@ -13,8 +12,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.res.TypedArrayUtils;
 import androidx.preference.DialogPreference;
-import androidx.preference.EditTextPreference;
-
 
 public class ExEditTextPreference extends DialogPreference {
     private String mText;
@@ -22,32 +19,32 @@ public class ExEditTextPreference extends DialogPreference {
     @Nullable
     private ExEditTextPreference.OnBindEditTextListener mOnBindEditTextListener;
 
-    @SuppressLint("PrivateResource")
-    private ExEditTextPreference(Context context, AttributeSet attrs, int defStyleAttr,
-                                int defStyleRes) {
+    public ExEditTextPreference(Context context, AttributeSet attrs, int defStyleAttr,
+                                 int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
 
         TypedArray a = context.obtainStyledAttributes(
                 attrs, R.styleable.EditTextPreference, defStyleAttr, defStyleRes);
 
-        if (TypedArrayUtils.getBoolean(a, R.styleable.EditTextPreference_useSimpleSummaryProvider,
-                R.styleable.EditTextPreference_useSimpleSummaryProvider, false)) {
+        if (TypedArrayUtils.getBoolean(a, R.styleable.ExEditTextPreference_useExSimpleSummaryProvider,
+                R.styleable.ExEditTextPreference_useExSimpleSummaryProvider, false)) {
             setSummaryProvider(ExEditTextPreference.SimpleSummaryProvider.getInstance());
         }
-
         a.recycle();
     }
 
-    private ExEditTextPreference(Context context, AttributeSet attrs, int defStyleAttr) {
+    public ExEditTextPreference(Context context, AttributeSet attrs, int defStyleAttr) {
         this(context, attrs, defStyleAttr, 0);
     }
 
-    private ExEditTextPreference(Context context, AttributeSet attrs) {
+    //!!! Тут должен быть по любому PUBLIC иначе будет крашиться при доступе в настройках
+    public ExEditTextPreference(Context context, AttributeSet attrs) {
         this(context, attrs, TypedArrayUtils.getAttr(context, R.attr.editTextPreferenceStyle,
                 android.R.attr.editTextPreferenceStyle));
     }
 
     public ExEditTextPreference(Context context) {
+
         this(context, null);
     }
 
