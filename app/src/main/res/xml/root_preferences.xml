@@ -1,7 +1,8 @@
 <androidx.preference.PreferenceScreen
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <PreferenceCategory app:title="@string/pref_title_cache_settings">
+    <PreferenceCategory app:title="@string/pref_title_cache_settings"
+        app:summary="@string/pref_title_cache_summ">
 
     <SwitchPreference
         app:defaultValue="false"

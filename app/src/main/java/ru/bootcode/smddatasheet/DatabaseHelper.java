@@ -219,7 +219,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         System.out.println(e.getMessage());
     }
         if (cursor != null)
-
     {
         cursor.moveToFirst();
         if (cursor.getCount() > 0) {

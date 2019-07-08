@@ -62,21 +62,7 @@ public class SettingsActivity extends AppCompatActivity {
                 });
             }
 
-            // Тут быстренько проверим доступен ли нам PDF Reader и если его нет то нефиг ковырять
-            // настройки с кешем (т.е. с локальными файлами), делаем их недоступными
-            Uri uri = Uri.parse("help.pdf");
-            Intent intentUrl = new Intent(Intent.ACTION_VIEW);
-            intentUrl.setDataAndType(uri, "application/pdf");
-            intentUrl.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
-            if (getActivity() ==null) { return;}
-            if (intentUrl.resolveActivity(getActivity().getPackageManager()) == null) {
-                SwitchPreference prefCache = getPreferenceManager().findPreference(KEY_PREF_CACHE);
-                if (prefCache != null) {
-                    prefCache.setEnabled(false);
-                    prefCache.setChecked(false);
-                }
-            }
         }
 
         @Override
@@ -117,6 +103,24 @@ public class SettingsActivity extends AppCompatActivity {
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
 
+            if (key.equals(KEY_PREF_CACHE)) {
+                // Тут быстренько проверим доступен ли нам PDF Reader и если его нет то нефиг ковырять
+                // настройки с кешем (т.е. с локальными файлами), делаем их недоступными
+                Uri uri = Uri.parse("help.pdf");
+                Intent intentUrl = new Intent(Intent.ACTION_VIEW);
+                intentUrl.setDataAndType(uri, "application/pdf");
+                intentUrl.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+                if (getActivity() ==null) { return;}
+                if (intentUrl.resolveActivity(getActivity().getPackageManager()) == null) {
+                    SwitchPreference prefCache = getPreferenceManager().findPreference(KEY_PREF_CACHE);
+                    if (prefCache != null) {
+                        Utils.showToast(getActivity(),R.string.toast_pdf_not_install);
+                        prefCache.setEnabled(false);
+                        prefCache.setChecked(false);
+                    }
+                }
+            }
         }
     }
 

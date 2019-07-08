@@ -156,17 +156,20 @@ public class MainActivity extends AppCompatActivity
                         .subscribe(new Observer<Component>() {
                             @Override
                             public void onNext(Component selectedComponent) {
-                                Intent intent = new Intent(MainActivity.this, ComponentActivity.class);
-                                intent.putExtra("id",       selectedComponent.getID());
-                                intent.putExtra("name",     selectedComponent.getName());
-                                intent.putExtra("body",     selectedComponent.getBody());
-                                intent.putExtra("label",    selectedComponent.getLabel());
-                                intent.putExtra("func",     selectedComponent.getFunc());
-                                intent.putExtra("prod",     selectedComponent.getProd());
-                                intent.putExtra("datasheet",selectedComponent.getDatasheet());
-                                intent.putExtra("favorite", selectedComponent.get_forvarite());
-                                intent.putExtra("islocal",  selectedComponent.get_islcal());
-                                startActivity(intent);
+                                if (selectedComponent != null) {
+                                    //dbHelper.getComponent(String.valueOf(id));
+                                    Intent intent = new Intent(MainActivity.this, ComponentActivity.class);
+                                    intent.putExtra("id", selectedComponent.getID());
+                                    intent.putExtra("name", selectedComponent.getName());
+                                    intent.putExtra("body", selectedComponent.getBody());
+                                    intent.putExtra("label", selectedComponent.getLabel());
+                                    intent.putExtra("func", selectedComponent.getFunc());
+                                    intent.putExtra("prod", selectedComponent.getProd());
+                                    intent.putExtra("datasheet", selectedComponent.getDatasheet());
+                                    intent.putExtra("favorite", selectedComponent.get_forvarite());
+                                    intent.putExtra("islocal", selectedComponent.get_islcal());
+                                    startActivity(intent);
+                                }
                             }
                             @Override
                             public void onCompleted() { }

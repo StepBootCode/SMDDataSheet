@@ -41,7 +41,7 @@ public class ComponentActivity extends Activity {
     Boolean keyCache;                       // Тру - нужно кешировать PDF файлы на устройстве
     String keySavePath;                     // Путь к кешу
 
-    int iFavorite;
+
     int isFavorite;
     int iIDComp;
 
@@ -147,7 +147,7 @@ public class ComponentActivity extends Activity {
                         .subscribe(new Observer<Integer>() {
                             @Override
                             public void onCompleted() {
-                                if (iFavorite > 0) {
+                                if (isFavorite > 0) {
                                     btnFavorite.setBackgroundResource(R.drawable.ic_favorite_on);
                                     Utils.showToast(ComponentActivity.this,R.string.toast_success_add_favorites);
                                 } else {

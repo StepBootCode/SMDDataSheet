@@ -56,5 +56,6 @@
     <string name="text_none">None</string>
     <string name="toast_update_not_found">Updates not found</string>
     <string name="pref_title_cache_settings">Cache settings</string>
+    <string name="pref_title_cache_summ">To view DataSheet locally, you need to install a PDF viewer</string>
 
 </resources>
