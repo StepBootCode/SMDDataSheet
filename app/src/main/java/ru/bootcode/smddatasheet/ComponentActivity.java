@@ -10,6 +10,7 @@ import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.Button;
@@ -120,11 +121,7 @@ public class ComponentActivity extends Activity {
                     }else{
                         showPDFfromURL(sLinkDatasheet);
                         // Загружаем файл в кеш
-                        try {
-                            downloadPDFFile(sLinkDatasheet, sCacheDatasheet);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                        downloadPDFFile(sLinkDatasheet, sCacheDatasheet);
                     }
                 } else {
                     showPDFfromURL(sLinkDatasheet);
@@ -201,11 +198,17 @@ public class ComponentActivity extends Activity {
     // Простое отображение PDF в PDF Reader, если он установлен (иначе возвращает FALSE) -----------
     private boolean showPDFfromCache(String f){
         try {
+            StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+            StrictMode.setVmPolicy(builder.build());
+
             Intent intentUrl = new Intent(Intent.ACTION_VIEW);
             intentUrl.setDataAndType(Uri.parse(f), "application/pdf");
-            intentUrl.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            //intentUrl.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intentUrl.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intentUrl.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+
             if (intentUrl.resolveActivity(getPackageManager()) != null) {
-                startActivity(intentUrl);
+                startActivity(Intent.createChooser(intentUrl, "Open file with"));
             } else {
                 showToast(context, R.string.toast_pdf_not_install);
                 return false;
@@ -217,13 +220,61 @@ public class ComponentActivity extends Activity {
     }
 
     // Загрузка PDF с сервера в локальное хранилище ------------------------------------------------
-    private void downloadPDFFile(String url, final String fl) throws IOException {
+    private void downloadPDFFile(String url, final String fl) {
+        final String[] str = {url};
+        Observable.from(str)
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.newThread())
+                .subscribe(new Observer<String>() {
+                    @Override
+                    public void onNext(String s) {
+                        final OkHttpClient client = new OkHttpClient();
+                        Request request = new Request.Builder()
+                                .url(s)
+                                .build();
+                        Response response = null;
+                        try {
+                            response = client.newCall(request).execute();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        if (null != response && response.body() != null) {
+                            if (response.isSuccessful()) {
+                                try {
+                                    OutputStream outputStream = new FileOutputStream(fl);
+                                    // Стандартное копирование потоков
+                                    byte[] buff = new byte[1024];
+                                    int length = 0;
+                                    while ((length = response.body().byteStream().read(buff)) > 0) {
+                                        outputStream.write(buff, 0, length);
+                                    }
+                                    outputStream.flush();
+                                    outputStream.close();
+
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    }
+                    @Override
+                    public void onCompleted() {
+//Utils.showToast(ComponentActivity.this,"Good");
+                    }
+                    @Override
+                    public void onError(Throwable e) {
+                        e.printStackTrace();
+                    }
+                });
+    }
+
+    private void downloadPDFFileTEST(String url, final String fl) throws IOException {
         final OkHttpClient client = new OkHttpClient();
         Request request = new Request.Builder().url(url).build();
 
         Observable.just(client.newCall(request).execute())
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.newThread())
+                //.subscribeOn(Schedulers.io())
+                //.observeOn(Schedulers.newThread())
                 .subscribe(new Observer<Response>() {
                     @Override
                     public void onNext(Response response) {
