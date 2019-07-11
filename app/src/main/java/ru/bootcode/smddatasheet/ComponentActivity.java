@@ -10,7 +10,6 @@ import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.StrictMode;
 import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.Button;
@@ -121,7 +120,9 @@ public class ComponentActivity extends Activity {
                     }else{
                         showPDFfromURL(sLinkDatasheet);
                         // Загружаем файл в кеш
+
                         downloadPDFFile(sLinkDatasheet, sCacheDatasheet);
+
                     }
                 } else {
                     showPDFfromURL(sLinkDatasheet);
@@ -198,26 +199,15 @@ public class ComponentActivity extends Activity {
     // Простое отображение PDF в PDF Reader, если он установлен (иначе возвращает FALSE) -----------
     private boolean showPDFfromCache(String f){
         try {
-            StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
-            StrictMode.setVmPolicy(builder.build());
-
-            Intent intentUrl = new Intent(Intent.ACTION_VIEW);
-            intentUrl.setDataAndType(Uri.parse(f), "application/pdf");
-            //intentUrl.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            intentUrl.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            intentUrl.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-
-            if (intentUrl.resolveActivity(getPackageManager()) != null) {
-                startActivity(Intent.createChooser(intentUrl, "Open file with"));
-            } else {
-                showToast(context, R.string.toast_pdf_not_install);
-                return false;
-            }
+            Intent intent = new Intent(ComponentActivity.this, PDFViewer.class);
+            intent.putExtra("filename", f);
+            startActivity(intent);
         } catch (ActivityNotFoundException e) {
             showToast(context, R.string.toast_pdf_not_install);
         }
         return true;
     }
+
 
     // Загрузка PDF с сервера в локальное хранилище ------------------------------------------------
     private void downloadPDFFile(String url, final String fl) {
