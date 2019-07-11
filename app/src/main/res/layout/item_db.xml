@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/linlayBackground"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -11,6 +12,7 @@
         android:id="@+id/ivCode"
         android:layout_width="32dp"
         android:layout_height="48dp"
+        android:contentDescription="@string/tv_code"
         android:scaleType="center"
         app:srcCompat="@android:drawable/ic_menu_help" />
 
@@ -24,18 +26,16 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="0.64"
             android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/tvNote"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:singleLine="true"
-                android:text="Note"
+                android:text="@string/tv_note"
                 android:textSize="16sp"
-                android:textStyle="normal|bold"></TextView>
+                android:textStyle="normal|bold" />
 
         </LinearLayout>
 
@@ -44,7 +44,6 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:layout_marginBottom="2dp"
-            android:layout_weight="0.64"
             android:orientation="horizontal">
 
             <TextView
@@ -53,19 +52,18 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:singleLine="true"
-                android:text="Name"
-                android:textSize="16sp" />
+                android:text="@string/tv_name"
+                android:textSize="16sp"
+                tools:ignore="NestedWeights" />
 
             <TextView
                 android:id="@+id/tvMarker"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="left"
                 android:layout_weight="1"
-                android:gravity="left"
                 android:singleLine="true"
-                android:text="Marker"
-                android:textSize="16sp"></TextView>
+                android:text="@string/tv_marker"
+                android:textSize="16sp" />
 
         </LinearLayout>
 
@@ -77,6 +75,7 @@
         android:layout_height="48dp"
         android:layout_weight="1"
         android:scaleType="center"
-        app:srcCompat="@android:drawable/btn_star_big_on" />
+        app:srcCompat="@android:drawable/btn_star_big_on"
+        android:contentDescription="@string/tv_code" />
 
 </LinearLayout>

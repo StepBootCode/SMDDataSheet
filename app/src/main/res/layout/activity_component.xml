@@ -156,7 +156,7 @@
             android:layout_alignParentBottom="false"
             android:layout_marginBottom="8dp"
             ads:adSize="BANNER"
-            ads:adUnitId="ca-app-pub-4325894448754236/6356575274"
+            ads:adUnitId="ca-app-pub-4325894448754236/1319083893 "
             ads:layout_constraintBottom_toBottomOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
