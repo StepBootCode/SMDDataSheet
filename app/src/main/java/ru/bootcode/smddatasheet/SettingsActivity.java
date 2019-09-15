@@ -38,7 +38,8 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
-    public static class SettingsFragment extends PreferenceFragmentCompat implements SharedPreferences.OnSharedPreferenceChangeListener {
+    public static class SettingsFragment extends PreferenceFragmentCompat
+                                        implements SharedPreferences.OnSharedPreferenceChangeListener {
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey);
@@ -47,7 +48,9 @@ public class SettingsActivity extends AppCompatActivity {
             // событии нажатия не показывает диалог ввода
             ExEditTextPreference editTextPreference = getPreferenceManager().findPreference(KEY_PREF_SAVE);
             if (editTextPreference != null) {
-                editTextPreference.setSummary(editTextPreference.getText());
+                editTextPreference.setSummary(getPreferenceManager()
+                        .getSharedPreferences()
+                        .getString("keySavePath", Utils.getDefaultCacheDir()));
                 editTextPreference.setOnPreferenceClickListener(
                         new ExEditTextPreference.OnPreferenceClickListener() {
                         @Override
@@ -61,7 +64,6 @@ public class SettingsActivity extends AppCompatActivity {
                         }
                 });
             }
-
 
         }
 

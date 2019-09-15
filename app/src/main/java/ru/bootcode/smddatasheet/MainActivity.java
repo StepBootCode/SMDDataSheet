@@ -14,6 +14,7 @@ import android.content.Intent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.view.View;
 import android.view.MenuItem;
 import android.view.LayoutInflater;
@@ -39,6 +40,7 @@ import com.google.android.gms.ads.MobileAds;
 
 import java.io.File;
 import java.util.List;
+import java.util.Locale;
 
 import rx.Observable;
 import rx.Observer;
@@ -280,6 +282,11 @@ public class MainActivity extends AppCompatActivity
             case R.id.nav_update:
                 // Зарезервируем под будущие плюшки
                 Utils.showToast(context, R.string.toast_update_not_found);
+                break;
+            case R.id.nav_googlepdf:
+                String format = "https://play.google.com/store/apps/details?id=com.google.android.apps.pdfviewer";
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
+                startActivity(browserIntent);
                 break;
             default:
                 break;

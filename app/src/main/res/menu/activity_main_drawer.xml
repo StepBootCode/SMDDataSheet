@@ -36,6 +36,10 @@
                 android:id="@+id/nav_update"
                 android:icon="@drawable/ic_update"
                 android:title="@string/menu_update" />
+            <item
+                android:id="@+id/nav_googlepdf"
+                android:icon="@drawable/ic_pdf_open"
+                android:title="@string/menu_googlepdf" />
         </menu>
     </item>
 

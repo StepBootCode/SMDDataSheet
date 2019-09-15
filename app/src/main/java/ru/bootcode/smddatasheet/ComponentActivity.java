@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.preference.PreferenceManager;
@@ -16,6 +17,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import androidx.core.content.FileProvider;
 
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
@@ -41,7 +44,6 @@ public class ComponentActivity extends Activity {
 
     Boolean keyCache;                       // Тру - нужно кешировать PDF файлы на устройстве
     String keySavePath;                     // Путь к кешу
-
 
     int isFavorite;
     int iIDComp;
@@ -77,7 +79,9 @@ public class ComponentActivity extends Activity {
 
 
         // Определяем ссылки на PDF файлы на сервере и локально (в кеше) ---------------------------
-        String fileName = sDatasheet.replace("~","0").replace("@","1").replace("#","2")+".pdf";
+        String fileName = sDatasheet.replace("~","0")
+                                    .replace("@","1")
+                                    .replace("#","2")+(iisLocal>0 ? "" : ".pdf");
         sLinkDatasheet = LINK+fileName;
         sCacheDatasheet = keySavePath +"/"+ fileName;
 
@@ -198,12 +202,26 @@ public class ComponentActivity extends Activity {
     // Простое отображение PDF в PDF Reader, если он установлен (иначе возвращает FALSE) -----------
     private boolean showPDFfromCache(String f){
         try {
-            StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
-            StrictMode.setVmPolicy(builder.build());
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                File file=new File(f);
+                Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", file);
+                intent.setData(uri);
+                intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                startActivity(intent);
+            } else {
+                intent.setDataAndType(Uri.parse(f), "application/pdf");
+                intent = Intent.createChooser(intent, "Open File");
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            }
 
+            /*
+            File file = new File(f);
             Intent intentUrl = new Intent(Intent.ACTION_VIEW);
-            intentUrl.setDataAndType(Uri.parse(f), "application/pdf");
+            intentUrl.setDataAndType(Uri.fromFile(file), "application/pdf");
             //intentUrl.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intentUrl.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
             intentUrl.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             intentUrl.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 
@@ -213,6 +231,7 @@ public class ComponentActivity extends Activity {
                 showToast(context, R.string.toast_pdf_not_install);
                 return false;
             }
+            */
         } catch (ActivityNotFoundException e) {
             showToast(context, R.string.toast_pdf_not_install);
         }
@@ -241,7 +260,9 @@ public class ComponentActivity extends Activity {
                         if (null != response && response.body() != null) {
                             if (response.isSuccessful()) {
                                 try {
-                                    OutputStream outputStream = new FileOutputStream(fl);
+                                    File file=new File(fl);
+                                    //Загадка! Без Append получаем Permission denied
+                                    OutputStream outputStream = new FileOutputStream(file, true);
                                     // Стандартное копирование потоков
                                     byte[] buff = new byte[1024];
                                     int length = 0;
