@@ -59,4 +59,8 @@
     <string name="pref_title_cache_summ">To view DataSheet locally, you need to install a PDF viewer</string>
     <string name="menu_googlepdf">Install PDF Viewer</string>
 
+    <string name="title_activity_fullscreen_pdfviewer">FullscreenPDFViewer</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+
 </resources>
