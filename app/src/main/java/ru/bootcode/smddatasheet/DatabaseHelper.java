@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Build;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +22,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     // Константы указывающие на базу данных в локальном каталоге приложения
     private static final String DBNAME = "smd.db";
-    //private static final String DBLOCATION = /data/data/ru.bootcode.smddatasheet/databases/smd.db
+    private static final String DBLOCATION = "/data/data/ru.bootcode.smddatasheet/databases/smd.db";
 
     private Context mContext;
     private SQLiteDatabase mDatabase;
@@ -33,7 +34,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     // Возвращает стандартный каталог с базой данных
     static String getDBLOCATION(Context context) {
-        return context.getDatabasePath(DBNAME).getPath();
+        int currentapiVersion = android.os.Build.VERSION.SDK_INT;
+        if (currentapiVersion >= Build.VERSION_CODES.P){
+            //outFileName = context.getApplicationInfo().dataDir + "/databases/" + DatabaseHelper.getDBNAME();
+
+            return DBLOCATION;//context.getDatabasePath(DBNAME).getAbsolutePath();
+        } else{
+            return context.getDatabasePath(DBNAME).getPath();
+        }
     }
 
     DatabaseHelper(Context context) {
@@ -57,6 +65,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         try {
         mDatabase = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READWRITE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                mDatabase.disableWriteAheadLogging();
+            }
         }catch (Exception ignored) { }
     }
 

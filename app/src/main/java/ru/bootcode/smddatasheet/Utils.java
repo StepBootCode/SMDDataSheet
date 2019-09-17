@@ -1,6 +1,7 @@
 package ru.bootcode.smddatasheet;
 
 import android.content.Context;
+import android.os.Build;
 import android.os.Environment;
 import android.widget.Toast;
 import androidx.annotation.StringRes;
@@ -58,7 +59,7 @@ class Utils {
             // Открываем поток - Откуда копируем (из каталога assets)
             InputStream inputStream = context.getAssets().open(DatabaseHelper.getDBNAME());
             // Открываем поток - Куда копируем (каталог программы)
-            String outFileName      = DatabaseHelper.getDBLOCATION(context);
+            String outFileName = DatabaseHelper.getDBLOCATION(context);
             OutputStream outputStream = new FileOutputStream(outFileName);
             // Стандартное копирование потоков
             byte[]buff = new byte[1024];

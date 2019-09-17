@@ -93,13 +93,10 @@ public class MainActivity extends AppCompatActivity
         // Инициализируем AdMob,  Для теста можно взять ID: ca-app-pub-3940256099942544/6300978111
         MobileAds.initialize(this, ADMOB_APP_ID);
 
-        // Создаем Helper для базы данных Компонентов и определяемся с локализацией ----------------
-        dbHelper = new DatabaseHelper(this);
 
         // Проверка на существование базы данных ---------------------------------------------------
         File database = getApplicationContext().getDatabasePath(DatabaseHelper.getDBNAME());
         if(!database.exists()) {
-            dbHelper.getReadableDatabase();
             if(Utils.copyDatabase(this)) {
                 Utils.showToast(this, R.string.toast_copy_succes);
             } else {
@@ -108,6 +105,9 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
+        // Создаем Helper для базы данных Компонентов и определяемся с локализацией ----------------
+        dbHelper = new DatabaseHelper(this);
+        dbHelper.getReadableDatabase();
         // Проверка на актуальность версии базы данных ---------------------------------------------
         Boolean isActualVersion =  dbHelper.getIsActualVersion();
         if(!isActualVersion) {
